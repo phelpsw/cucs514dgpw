@@ -1,0 +1,9 @@
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\bin\Debug\Webcam_Test.exe
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\bin\Debug\Webcam_Test.pdb
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\bin\Debug\WebCam_Capture.dll
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\bin\Debug\WebCam_Capture.pdb
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\obj\Debug\Webcam_Test.Form1.resources
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\obj\Debug\Webcam_Test.csproj.GenerateResource.Cache
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\obj\Debug\Webcam_Test.exe
+C:\Users\Dan\Desktop\C__Webcam_161075762003\Webcam_Test\obj\Debug\Webcam_Test.pdb
