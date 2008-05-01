@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="CS514_HW2">
+</Property><Property Name="Solution File" Value="C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\CS514_HW2.sln">
+</Property><Property Name="User Options File" Value="C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\CS514_HW2.suo">
+</Property><Property Name="Date" Value="Friday, March 07, 2008">
+</Property><Property Name="Time" Value="14:23 PM">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="CS514_HW2.sln" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2.sln">
+</Event><Event ErrorLevel="0" Project="" Source="CS514_HW2.suo" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2.suo">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\CS514_HW2.csproj" Description="Project file successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\CS514_HW2.csproj">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\CS514_HW2.csproj.user" Description="Project user file successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\CS514_HW2.csproj.user">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Class1.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Class1.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Confirm.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Confirm.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Confirm.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Confirm.Designer.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Form1.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Form1.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Form1.Designer.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Form1.Designer.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\NativeMethods.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\NativeMethods.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\PriorityQueue.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\PriorityQueue.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Properties\AssemblyInfo.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\TextBoxAPIHelper.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\TextBoxAPIHelper.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\TextEffects.cs" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\TextEffects.cs">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\postbuild.bat" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\postbuild.bat">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\channels\10000000000000000000000000000000\metadata.xml" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\channels\10000000000000000000000000000000\metadata.xml">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\metadata.xml" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\metadata.xml">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Confirm.resx" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Confirm.resx">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\Form1.resx" Description="File successfully backed up as C:\Documents and Settings\Da\My Documents\Projects\CS514_HW2\Backup\CS514_HW2\Form1.resx">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\CS514_HW2.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="CS514_HW2" Source="CS514_HW2\CS514_HW2.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="CS514_HW2.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="CS514_HW2.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="CS514_HW2" Source="CS514_HW2\CS514_HW2.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>
