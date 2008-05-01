@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ID>10000000000000000000000000000000</ID>
+  <Name>ChatChannel</Name>
+  <Comment>Channel for a shared chat source: xml interface</Comment>
+  <MessageClass id="148B8C6B886A49029CD81610CB75EEE6" />
+  <CheckpointClass id="148B8C6B886A49029CD81610CB75EEE6" />
+</Metadata>
