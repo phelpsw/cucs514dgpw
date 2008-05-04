@@ -9,9 +9,10 @@ using System.Windows.Forms;
 
 namespace VideoMonitor_Proj3
 {
-    public partial class Viewer : UserControl
+    [QS.Fx.Reflection.ComponentClass("3`1", "VideoViewer", "This component provides an interface to view selected indexed video sources")]
+    public partial class VideoViewer : UserControl
     {
-        public Viewer()
+        public VideoViewer()
         {
             InitializeComponent();
         }

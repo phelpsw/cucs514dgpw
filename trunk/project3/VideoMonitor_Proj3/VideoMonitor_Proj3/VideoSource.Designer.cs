@@ -1,6 +1,6 @@
 ﻿namespace VideoMonitor_Proj3
 {
-    partial class Source
+    partial class VideoSource
     {
         /// <summary> 
         /// Required designer variable.

@@ -1,6 +1,6 @@
 ﻿namespace VideoMonitor_Proj3
 {
-    partial class Viewer
+    partial class VideoViewer
     {
         /// <summary> 
         /// Required designer variable.

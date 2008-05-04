@@ -9,9 +9,10 @@ using System.Windows.Forms;
 
 namespace VideoMonitor_Proj3
 {
-    public partial class Source : UserControl
+    [QS.Fx.Reflection.ComponentClass("1`1","VideoSource","This component provides a video source and provides an endpoint for a VideoServer")]
+    public partial class VideoSource : UserControl
     {
-        public Source()
+        public VideoSource()
         {
             InitializeComponent();
         }
