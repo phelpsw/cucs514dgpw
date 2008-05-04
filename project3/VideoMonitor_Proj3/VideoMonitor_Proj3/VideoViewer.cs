@@ -12,7 +12,9 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ComponentClass("3`1", "VideoViewer", "This component provides an interface to view selected indexed video sources")]
     public partial class VideoViewer : UserControl, QS.Fx.Object.Classes.IUI
     {
-        public VideoViewer()
+        public VideoViewer(
+            [QS.Fx.Reflection.Parameter("viewChannel", QS.Fx.Reflection.ParameterClass.Value)]
+            QS.Fx.Object.IReference<QS.Fx.Object.Classes.IObject> viewChannel)
         {
             InitializeComponent();
             this.internal_endpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);

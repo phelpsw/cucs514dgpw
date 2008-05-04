@@ -12,7 +12,9 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ComponentClass("1`1","VideoSource","This component provides a video source and provides an endpoint for a VideoServer")]
     public partial class VideoSource : UserControl, QS.Fx.Object.Classes.IUI
     {
-        public VideoSource()
+        public VideoSource(
+            [QS.Fx.Reflection.Parameter("sourceChannel", QS.Fx.Reflection.ParameterClass.Value)]
+            QS.Fx.Object.IReference<QS.Fx.Object.Classes.IObject> sourceChannel)
         {
             InitializeComponent();
             this.internal_endpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
