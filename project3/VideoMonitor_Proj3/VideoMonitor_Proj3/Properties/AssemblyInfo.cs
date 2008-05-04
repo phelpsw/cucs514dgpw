@@ -2,15 +2,16 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: QS.Fx.Reflection.Library("80BF90BD866049bc87223A029311D797`1")]
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("VideoMonitor_Proj3")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("WL")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("VideoMonitor_Proj3")]
-[assembly: AssemblyCopyright("Copyright © WL 2008")]
+[assembly: AssemblyCopyright("Copyright © 2008")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
