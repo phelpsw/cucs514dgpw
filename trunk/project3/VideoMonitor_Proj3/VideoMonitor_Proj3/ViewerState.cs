@@ -5,7 +5,8 @@ using System.Text;
 
 namespace VideoMonitor_Proj3
 {
-    class ViewerState
+    [QS.Fx.Reflection.ValueClass("3`1", "ViewerState")]
+    public class ViewerState
     {
     }
 }
