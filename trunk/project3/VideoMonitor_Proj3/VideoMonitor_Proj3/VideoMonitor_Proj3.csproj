@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="liveobjects_1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0f84102260c4a1aa, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\liveobjects\bin\liveobjects_1.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -48,11 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Image.cs" />
-    <Compile Include="Source.cs">
+    <Compile Include="VideoSource.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Source.Designer.cs">
-      <DependentUpon>Source.cs</DependentUpon>
+    <Compile Include="VideoSource.Designer.cs">
+      <DependentUpon>VideoSource.cs</DependentUpon>
     </Compile>
     <Compile Include="SourceState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -64,13 +68,22 @@
     <Compile Include="VideoServer.Designer.cs">
       <DependentUpon>VideoServer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Viewer.cs">
+    <Compile Include="VideoViewer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Viewer.Designer.cs">
-      <DependentUpon>Viewer.cs</DependentUpon>
+    <Compile Include="VideoViewer.Designer.cs">
+      <DependentUpon>VideoViewer.cs</DependentUpon>
     </Compile>
     <Compile Include="ViewerState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="liveobjects\VideoViewer.liveobject" />
+    <Content Include="liveobjects\VideoSource.liveobject" />
+    <Content Include="liveobjects\VideoServer.liveobject" />
+    <Content Include="metadata.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="postbuild.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -80,4 +93,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PostBuildEvent>"$(ProjectDir)postbuild.bat" "$(ProjectDir)" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
