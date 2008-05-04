@@ -12,7 +12,11 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ComponentClass("2`1", "VideoServer", "This component provides a centralized source index and source distributor")]
     public partial class VideoServer : UserControl, QS.Fx.Object.Classes.IUI
     {
-        public VideoServer()
+        public VideoServer(
+            [QS.Fx.Reflection.Parameter("sourceChannel", QS.Fx.Reflection.ParameterClass.Value)]
+            QS.Fx.Object.IReference<QS.Fx.Object.Classes.IObject> sourceChannel,
+            [QS.Fx.Reflection.Parameter("viewChannel", QS.Fx.Reflection.ParameterClass.Value)]
+            QS.Fx.Object.IReference<QS.Fx.Object.Classes.IObject> viewChannel)
         {
             InitializeComponent();
             this.internal_endpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
