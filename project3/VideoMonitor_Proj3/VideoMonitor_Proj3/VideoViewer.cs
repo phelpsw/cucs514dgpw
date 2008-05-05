@@ -40,17 +40,25 @@ namespace VideoMonitor_Proj3
 
         #region IVMAppFunc Members
 
-        void IVMAppFunc.Ready()
+        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+        {
+            // buffer image
+            // use timer to grab from buffer
+            // handle ordering during buffer insert possibly
+            pictureBox1.Image = frame.Picture;
+        }
+
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID)
         {
             throw new NotImplementedException();
         }
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id)
+        VMService IVMAppFunc.GetLocalService(string origID)
         {
-            throw new NotImplementedException();
+            return new VMService(null, VMService.ServiceType.SVC_TYPE_VIDEO_VIEWER, VMService.AvailService.SVC_AVAIL_VIEWER_USR_C, null);
         }
 
-        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters)
+        VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
             throw new NotImplementedException();
         }
