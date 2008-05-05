@@ -27,6 +27,9 @@ namespace VideoMonitor_Proj3
                 QS.Fx.Interface.Classes.ICheckpointedCommunicationChannel<VMMessage, NullC>,
                 QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>>(this);
             this.channelconnection = this.channelendpoint.Connect(channel.Object.Channel);
+
+             //set local id
+            this.instanceID = System.Guid.NewGuid().ToString();
         }
 
         private bool ready;
@@ -44,7 +47,8 @@ namespace VideoMonitor_Proj3
 
        
         //Configure Message Behaviors Here
-        enum VMMsgConfig {
+        enum VMMsgConfig
+        {
             //Standard time between check for expired alarms
             alarmCheck = 100,
 
@@ -62,8 +66,19 @@ namespace VideoMonitor_Proj3
 
         }
 
+        public string instanceID = "";
+
         //if true: this node is currently the root-node of the system (only needed for circular watches)
         private bool amRoot = false;
+
+        //if node has recieved network info packet yet
+        private bool isInitialized = false;
+
+        //local copy of the network configuration
+        private VMNetwork network;
+
+        //local address
+        private VMAddress myAddress;
 
         //number of nodes in the system
         private int nodes;
@@ -99,24 +114,47 @@ namespace VideoMonitor_Proj3
         //List of Viewable Messages (ordered by insertion)
         private List<VMMessage> messageList = new List<VMMessage>();
 
-        //Index to Viewable Messages (not necissarily ordered correctly)
+        //Index to Viewable Messages (not necissarily ordered correctly, but easily referenced)
         private IDictionary<string, VMMessage> messageIndex = new Dictionary<string, VMMessage>();
 
 
 
         //When Connection to Channel is established, the following method will be called to set up the local connection
-        void networkReady()
+        private void networkReady()
         {
-            //broadcast query packet
-            lock(messages) {
-                this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK,messages++,DateTime.Now,null,null,null,null,
-                (messageTypes.MSG_TYPE_EXPOSE, DateTime.Now, null, null, (myNodeNum + 1)));
-            }
+            if (!isInitialized)
+            {
+                //broadcast network query message
+                lock (messages)
+                {
+                    //create message
+                    VMMessage msg = new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK, messages++, DateTime.Now, null, null, null, null, null, null, null, 1, VMMsgConfig.netowrk_model_wait_count);
+                    //send message
+                    this.channelendpoint.Interface.Send(msg);
+                }
+                //ad an alarm to resend the request the given number of times after waiting the specified time.
 
+                AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
+                    DateTime.Now.AddMilliseconds(VMMsgConfig.netowrk_model_wait_ttl), //set delay
+                    msg, setAsRoot, null)); //message and callback stuff
+            }
         }
 
+        //callback if no response is recieved from network request from networkReady
+        public static void setAsRoot(Parameter[] parameters)
+        {
+            //initialize my address
+            this.myAddress = new VMAddress(new int[] {0});
 
-        //retrieve all of the locked items in a specific message
+            VMService mySvc = this.interfaceEndpoint.Interface.GetLocalService();
+ 
+            mySvc.svc_addr = this.myAddress;
+
+            //initialize network object
+            network = new VMNetwork(new VMService[] { mySvc });
+        }
+
+        //retrieve all of the alarms corrisponding to the given message id
         public List<VMAlarm> getAlarmsByMessage(int msg_id)
         {
             List<VMAlarm> list = new List<VMAlarm>();
@@ -128,7 +166,6 @@ namespace VideoMonitor_Proj3
                     list.Add(l);
                 }
             }
-            list.Sort(poscmp); // add back poscomp TODO
             return list;
         }
        
@@ -152,6 +189,18 @@ namespace VideoMonitor_Proj3
             timer = null;
         }
 
+        //Add an alarm and start the timer if not already
+        private void AddAlarm(VMAlarm alarm)
+        {
+            //add alarm to the timers list
+            alarmTimers.Enqueue(alarm);
+
+            //add alarm to the indexed list
+            alarmList.Add(alarm.ToString(), alarm);
+
+            if (timer == null) StartTimer(); //timer not currently running, start it
+        }
+
         //Timer Thread to Monitor lockTimers queue and 
         private void Timer(object obj)
         {
@@ -160,10 +209,21 @@ namespace VideoMonitor_Proj3
                 //remove all expired timers
                 while (alarmTimers.Count != 0 && ((VMAlarm)alarmTimers.Peek()).expires.Subtract(DateTime.Now).Seconds < 0)
                 {
-                    //now re-send the message that has expired
+                    VMAlarm alarm = (VMAlarm)alarmTimers.Dequeue();
+                    //now route alarm
+                    switch (alarm.type)
+                    {
+                        case VMAlarm.AlarmType.ALM_TYPE_MESSAGE:
+                            VMMessage msg = alarm.message;
+                            msg.sent++; //incriment sent count
+                            break;
 
-                    //remove lock from the queue and from the lockList
-                    alarmList.Remove(((VMAlarm)alarmTimers.Dequeue()).toString());
+                        case VMAlarm.AlarmType.ALM_TYPE_CALLBCK:
+                            break;
+                    }
+
+                    //remove alarm from the queue and from the listist
+                    alarmList.Remove(alarm.toString());
                 }
                 if (alarmList.Count == 0 && !editState) StopTimer(); //end the timer if none remain
             }
@@ -190,19 +250,24 @@ namespace VideoMonitor_Proj3
             {
                 while (incoming.Count > 0)
                 {
-                    IMessage msg = incoming.Dequeue();
+                    VMMessage msg = incoming.Dequeue();
                     switch (msg.type)
                     {
-                        //Case for normal Chat Messages
-                        case messageType.MSG_TYPE_SEND_MSG:
-                            if (msg.message != null)
+                        //Normal Frame Recieved
+                        case messageType.MSG_TYPE_SEND_FRAME:
+                            if (msg.image != null)
                             {
-                                msg.message.recieveTime = DateTime.Now;
-                                //simply add to the message list
-                                messageList.Add(msg.message);
-                                messageIndex.Add(msg.message.id.toString(), msg.message);
+                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid);
                             }
-                            this.Refresh(null, null); //redraw for new message
+                            break;
+
+
+                        //Network layout recieved, only react if ist first layout
+                        case messageType.MSG_TYPE_RESPOND_NETWORK:
+                            if (msg.image != null)
+                            {
+                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid);
+                            }
                             break;
 
                         //Lock Request
@@ -296,6 +361,48 @@ namespace VideoMonitor_Proj3
         }
 
         /** END DIGESTOR FUNCTIONS **/
+
+        //** COMMINTERFACE EXPORTED FUNCTIONS (IVMCommInt) **//
+
+        //return if the network is ready to send
+        bool IVMCommInt.Ready()
+        {
+
+        }
+
+        //gets the local network configuration
+        VMNetwork IVMCommInt.NetworkStats()
+        {
+            return network;
+        }
+
+        void IVMCommInt.SendFrame(Image frame, FrameID id) //send a frame 
+        {
+            //send frame message
+            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, myAddress, null, 1, 1));
+        }
+
+        void IVMCommInt.SendGlobalCommand(string rfc_command, Parameter[] parameters)
+        {
+            //send command w/ no destination
+            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, myAddress, null, 1, 1));
+        }
+
+        void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, Parameter[] parameters)
+        {
+            //send command with given destination
+            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, myAddress, dest, 1, 1));
+        }
+
+        void IVMCommInt.SendLocalServices(VMService service)
+        {
+            //update local address
+            service.svc_addr = myAddress;
+            //send local service to network (forces update over network)
+            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, messages++, DateTime.Now, null, null, null, null, service, myAddress, null, 1, 1));
+        }
+
+
 
         #region ICheckpointedCommunicationChannelClient<IMessage, IChatState> Members
 

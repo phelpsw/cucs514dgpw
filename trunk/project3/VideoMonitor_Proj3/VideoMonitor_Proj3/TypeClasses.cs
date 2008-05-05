@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, VMService service, AddressClass srcAddr, AddressClass dstAddr,int count)
+        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, VMService service, AddressClass srcAddr, AddressClass dstAddr,int count,int max_count)
         {
             this.type = type;
             this.id = id;
@@ -43,6 +43,8 @@ namespace VideoMonitor_Proj3
             this.dstAddr = dstAddr;
             this.first =  first;
             this.fid = fid;
+            this.count = count;
+            this.max_count = max_count;
         }
 
         public VMMessage()
@@ -53,6 +55,8 @@ namespace VideoMonitor_Proj3
         public int id; //message id
         [XmlElement]
         public int count; //represents the sub-id of a message, or the number of times it has attempted to send
+        [XmlElement]
+        public int max_count; //maximum number of times the message will try
         [XmlElement]
         public int type; //message type
         [XmlAttribute]
@@ -89,12 +93,12 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("3`1", "Parameter")]
     public sealed class Parameter
     {
-        Parameter(string name,string val)
+        public Parameter(string name, string val)
         {
             this.name = name;
             this.val = val;
         }
-        Parameter()
+        public Parameter()
         {
 
         }
@@ -107,12 +111,12 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("4`1", "VMAddress")]
     public sealed class VMAddress
     {
-        VMAddress(VMid[] id)
+        public VMAddress(VMid[] id)
         {
             this.id = id;
         }
 
-        VMAddress()
+        public VMAddress()
         {
 
         }
@@ -135,13 +139,13 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("6`1", "FrameID")]
     public sealed class FrameID
     {
-        FrameID(DateTime time,int id)
+        public FrameID(DateTime time, int id)
         {
             this.time = time;
             this.id = id;
         }
 
-        FrameID()
+        public FrameID()
         {
          
         }
@@ -155,12 +159,12 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("7`1", "VMNetwork")]
     public sealed class VMNetwork
     {
-        VMNetwork(VMService[] services)
+        public VMNetwork(VMService[] services)
         {
             this.services = services;
         }
 
-        VMNetwork()
+        public VMNetwork()
         {
                
         }
@@ -172,13 +176,13 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("8`1", "VMService")]
     public sealed class VMService
     {
-        VMService(VMAddress addr,int svc_type,int svc_avail,VMService subServices)
+        public VMService(VMAddress addr, int svc_type, int svc_avail, VMService subServices)
         {
             this.svc_type = svc_type;
             this.svc_avail = svc_avail;
         }
 
-        VMService()
+        public VMService()
         {
 
         }
@@ -217,23 +221,46 @@ namespace VideoMonitor_Proj3
         public VMService[] subServices; //for server element, holds services of adjacent channel availiable
     }
 
+    //deligate callback type for alarms
+    public delegate void VMAlarmCallback(Parameter[] parameters);
+
     public sealed class VMAlarm
     {
-        VMAlarm(DateTime expires,VMMessage toSend)
+        public VMAlarm(int type, DateTime expires, VMMessage toSend, VMAlarmCallback callback, Parameter[] callbackParams)
         {
             this.expires = expires;
+            this.type = type;
             this.message = toSend;
 
+            if (callback != null)
+            {
+                this.callback = new VMAlarmCallback(callback);
+                this.callbackParams = callbackParams;
+            }
         }
 
-        VMAlarm()
+        public VMAlarm()
         {
 
         }
+
+        public class AlarmType
+        {
+            public const int ALM_TYPE_MESSAGE = 1; //sends out message in message
+            public const int ALM_TYPE_CALLBCK = 2; //calls function given
+
+            public const int ALM_TYPE_CONTMSG = 4; //Contingent message, calls function only if max send count is exceeded;
+        }
+
+        public int type; //type of alarm
 
         public DateTime expires; //expiration of alarm
 
         public VMMessage message; //message to be sent after alarm expires if not removed
+
+        public VMAlarmCallback callback; //callback to be called on expiration
+
+        public Parameter[] callbackParams; //parameters to be passed to callback function
     }
 
     public class AlarmComparer : System.Collections.IComparer
