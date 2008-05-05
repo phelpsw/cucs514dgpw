@@ -27,6 +27,6 @@ namespace VideoMonitor_Proj3
         void SendLocalServices(VMService service);
 
         [QS.Fx.Reflection.Operation("GetNetworkServices")]
-        VMService GetNetworkServices();
+        VMService[] GetNetworkServices();
     }
 }
