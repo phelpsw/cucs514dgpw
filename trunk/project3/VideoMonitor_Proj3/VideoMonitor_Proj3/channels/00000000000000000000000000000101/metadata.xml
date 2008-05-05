@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ID>00000000000000000000000000000101</ID>
+  <Name>VideoViewer ID:101</Name>
+  <Comment>Information between the VideoViewer and VideoServer is transmitted on this channel</Comment>
+  <MessageClass id="80BF90BD866049bc87223A029311D797" />
+  <CheckpointClass id="80BF90BD866049bc87223A029311D797" />
+</Metadata>
