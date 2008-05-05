@@ -24,5 +24,8 @@ namespace VideoMonitor_Proj3
         [QS.Fx.Reflection.Operation("GetLocalService")]
         VMService GetLocalService();
 
+        [QS.Fx.Reflection.Operation("GetRemoteServices")]
+        VMService[] GetRemoteServices(string originating_id); 
+
     }
 }
