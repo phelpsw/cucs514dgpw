@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, AddressClass srcAddr, AddressClass dstAddr,int count)
+        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, VMService service, AddressClass srcAddr, AddressClass dstAddr,int count)
         {
             this.type = type;
             this.id = id;
@@ -38,6 +38,7 @@ namespace VideoMonitor_Proj3
             this.parameters = parameters;
             this.rfc_command = rfc_command;
             this.image = image;
+            this.service = service;
             this.srcAddr = srcAddr;
             this.dstAddr = dstAddr;
             this.first =  first;
@@ -68,6 +69,8 @@ namespace VideoMonitor_Proj3
         public FrameID fid; //id for image frame
         [XmlAttribute]
         public VMNetwork network; //network model
+        [XmlAttribute]
+        public VMService service; //availiable service model
 
         //Message SRC/DEST info
         [XmlAttribute]
