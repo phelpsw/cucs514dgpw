@@ -19,12 +19,15 @@ namespace VideoMonitor_Proj3
         QS.Fx.Object.Classes.IUI,
         IVMAppFunc
     {
+
         public VideoServer(
             [QS.Fx.Reflection.Parameter("sourceStreamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
             QS.Fx.Object.IReference<IVideoStream> sourceStreamProcessor,
             [QS.Fx.Reflection.Parameter("viewerStreamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
             QS.Fx.Object.IReference<IVideoStream> viewerStreamProcessor)
         {
+            viewerSPID = viewerStreamProcessor.ID;
+            sourceSPID = sourceStreamProcessor.ID;
             InitializeComponent();
             this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
             this.sourceStreamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
@@ -38,7 +41,9 @@ namespace VideoMonitor_Proj3
         private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> viewerStreamEndPoint;
         private QS.Fx.Endpoint.IConnection sourceConnection;
         private QS.Fx.Endpoint.IConnection viewerConnection;
-        
+
+        private string viewerSPID;
+        private string sourceSPID;
 
         #region IUI Members
 
@@ -49,20 +54,26 @@ namespace VideoMonitor_Proj3
 
         #endregion
 
-
         #region IVMAppFunc Members
 
-        void IVMAppFunc.Ready()
+
+        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+        {
+            if (origID == sourceSPID)
+                viewerStreamEndPoint.Interface.SendFrame(frame, id);
+        }
+
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID)
         {
             throw new NotImplementedException();
         }
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id)
+        VMService IVMAppFunc.GetLocalService(string origID)
         {
-            throw new NotImplementedException();
+            return new VMService(null, VMService.ServiceType.SVC_TYPE_VIDEO_SERVER, 0, null);
         }
 
-        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters)
+        VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
             throw new NotImplementedException();
         }

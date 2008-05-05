@@ -38,19 +38,25 @@ namespace VideoMonitor_Proj3
 
         #endregion
 
+
         #region IVMAppFunc Members
 
-        void IVMAppFunc.Ready()
+
+        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+        { // ignore
+        }
+
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID)
         {
             throw new NotImplementedException();
         }
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id)
+        VMService IVMAppFunc.GetLocalService(string origID)
         {
-            throw new NotImplementedException();
+            return new VMService(null, VMService.ServiceType.SVC_TYPE_VIDEO_SOURCE, VMService.AvailService.SVC_AVAIL_VIDEO_SOURCE, null);
         }
 
-        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters)
+        VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
             throw new NotImplementedException();
         }
