@@ -28,5 +28,8 @@ namespace VideoMonitor_Proj3
 
         [QS.Fx.Reflection.Operation("GetNetworkServices")]
         VMService[] GetNetworkServices();
+
+        [QS.Fx.Reflection.Operation("GetInstanceID")]
+        string GetInstanceID();
     }
 }

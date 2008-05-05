@@ -146,9 +146,11 @@ namespace VideoMonitor_Proj3
             //initialize my address
             this.myAddress = new VMAddress(new int[] {0});
 
-            VMService mySvc = this.interfaceEndpoint.Interface.GetLocalService();
+            VMService mySvc = this.interfaceEndpoint.Interface.GetLocalService(this.instanceID);
  
             mySvc.svc_addr = this.myAddress;
+
+            mySvc.subServices = this.interfaceEndpoint.Interface.GetRemoteServices(this.instanceID);
 
             //initialize network object
             network = new VMNetwork(new VMService[] { mySvc });
@@ -257,7 +259,7 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_SEND_FRAME:
                             if (msg.image != null)
                             {
-                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid);
+                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid,this.instanceID);
                             }
                             break;
 
@@ -266,7 +268,7 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_RESPOND_NETWORK:
                             if (msg.image != null)
                             {
-                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid);
+                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid, this.instanceID) ;
                             }
                             break;
 
@@ -402,6 +404,15 @@ namespace VideoMonitor_Proj3
             this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, messages++, DateTime.Now, null, null, null, null, service, myAddress, null, 1, 1));
         }
 
+        VMService[] IVMCommInt.GetNetworkServices()
+        {
+            return this.network.services;
+        }
+
+        string IVMCommInt.GetInstanceID()
+        {
+            return this.instanceID;
+        }
 
 
         #region ICheckpointedCommunicationChannelClient<IMessage, IChatState> Members
