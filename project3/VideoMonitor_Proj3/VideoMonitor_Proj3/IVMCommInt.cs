@@ -12,10 +12,10 @@ namespace VideoMonitor_Proj3
         bool Ready();
 
         [QS.Fx.Reflection.Operation("NetworkStats")]
-        VMStats NetworkStats(); //returns entire network status and availiable services
+        VMNetwork NetworkStats(); //returns entire network status and availiable services
 
         [QS.Fx.Reflection.Operation("SendFrame")]
-        void SendFrame(Image frame);
+        void SendFrame(Image frame, FrameID id);
 
         [QS.Fx.Reflection.Operation("SendGlobalCommand")]
         void SendGlobalCommand(string rfc_command, Parameter[] parameters);
