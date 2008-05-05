@@ -10,41 +10,47 @@ using System.Windows.Forms;
 namespace VideoMonitor_Proj3
 {
     [QS.Fx.Reflection.ComponentClass("1`1","VideoSource","This component provides a video source and provides an endpoint for a VideoServer")]
-    public partial class VideoSource : UserControl, QS.Fx.Object.Classes.IUI,
-        QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, SourceState>
+    public partial class VideoSource : 
+        UserControl,
+        QS.Fx.Object.Classes.IUI,
+        IVMAppFunc
     {
         public VideoSource(
-            [QS.Fx.Reflection.Parameter("channel", QS.Fx.Reflection.ParameterClass.Value)]
-            QS.Fx.Object.IReference<QS.Fx.Object.Classes.ICheckpointedCommunicationChannel<VMMessage, SourceState>> channel)
+            [QS.Fx.Reflection.Parameter("streamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
+            QS.Fx.Object.IReference<IVideoStream> streamProcessor)
         {
             InitializeComponent();
-            this.internal_endpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
+            this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
+            this.streamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
+            this.sourceConnection = this.streamEndPoint.Connect(streamProcessor.Object.VideoProcessor);
         }
 
-        private QS.Fx.Endpoint.Internal.IExportedUI internal_endpoint;
+        private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
+        private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> streamEndPoint;
+        private QS.Fx.Endpoint.IConnection sourceConnection;
 
         #region IUI Members
 
         QS.Fx.Endpoint.Classes.IExportedUI QS.Fx.Object.Classes.IUI.UI
         {
-            get { return this.internal_endpoint; }
+            get { return this.uiendpoint; }
         }
 
         #endregion
 
-        #region ICheckpointedCommunicationChannelClient<VMMessage,SourceState> Members
+        #region IVMAppFunc Members
 
-        SourceState QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, SourceState>.Checkpoint()
+        void IVMAppFunc.Ready()
         {
             throw new NotImplementedException();
         }
 
-        void QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, SourceState>.Initialize(SourceState _checkpoint)
+        void IVMAppFunc.RecieveFrame(Image frame, FrameID id)
         {
             throw new NotImplementedException();
         }
 
-        void QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, SourceState>.Receive(VMMessage _message)
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters)
         {
             throw new NotImplementedException();
         }
