@@ -21,7 +21,7 @@ namespace VideoMonitor_Proj3
         void RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters);
 
         //[QS.Fx.Reflection.Operation("N")]
-        //void RecieveFrame(Image frame);
+        void RecieveFrame(Image frame);
 
     }
 }
