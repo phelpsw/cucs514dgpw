@@ -9,4 +9,4 @@ xcopy /y %2VideoMonitor_Proj3.dll %root%\libraries\%namespace%\%version%\data\
 xcopy /y %2VideoMonitor_Proj3.pdb %root%\libraries\%namespace%\%version%\data\
 xcopy /y %1metadata.xml %root%\libraries\%namespace%\%version%\
 REM the following line is used when config for TCP comm
-REM xcopy /e /r /y %1channels\*.* %root%\channels\ 
+xcopy /e /r /y %1channels\*.* %root%\channels\ 
