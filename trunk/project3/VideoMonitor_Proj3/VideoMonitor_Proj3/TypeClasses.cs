@@ -6,70 +6,242 @@ using System.Xml.Serialization;
 
 namespace VideoMonitor_Proj3
 {
-    class TypeClasses
-    {
-    }
+    using VMid = System.Int32;
 
-    public class messageTypes
+    public class messageType
     {
-        //Type for Simple Chat Send
+        //Simple Frame Packet
         public const int MSG_TYPE_SEND_FRAME = 1;
-        //Type for Lock Request
+        //Simple Control Message
         public const int MSG_TYPE_CONTROL_RFC = 2;
-        //Message that exposes all nodes to a new node, indicating the number in the set
-        public const int MSG_TYPE_EXPOSE = 4;
+        //Message to Expose local service to the network
+        public const int MSG_TYPE_EXPOSE_SVC = 4;
+        //Message sent to parent to test that it still exists in the network
+        public const int MSG_TYPE_CONFIRM_LIVE = 8;
+        //Message sent from parent to confirm that it is alive
+        public const int MSG_TYPE_RESPOND_LIVE = 16;
+        //Message sent from new node to parent in network to request the network layout
+        public const int MSG_TYPE_REQUEST_NETWORK = 32;
+        //Message sent to a new node with payload of network layout
+        public const int MSG_TYPE_RESPOND_NETWORK = 64;
+
     }
 
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type, DateTime sent, Parameter[] parameters, string rfc_command, VMImage image, AddressClass srcAddr, AddressClass dstAddr)
+        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, AddressClass srcAddr, AddressClass dstAddr,int count)
         {
             this.type = type;
+            this.id = id;
             this.sent = sent;
             this.parameters = parameters;
             this.rfc_command = rfc_command;
             this.image = image;
             this.srcAddr = srcAddr;
             this.dstAddr = dstAddr;
+            this.first =  first;
+            this.fid = fid;
         }
 
         public VMMessage()
         {
         }
-
-
-        [XmlAttribute]
+        //Message identifiers
+        [XmlElement]
+        public int id; //message id
+        [XmlElement]
+        public int count; //represents the sub-id of a message, or the number of times it has attempted to send
+        [XmlElement]
         public int type; //message type
         [XmlAttribute]
         public DateTime sent; //sent time
-        [XmlAttribute]
-        public Parameter[] parameters;
-        [XmlAttribute]
-        public string rfc_command;
+        
+        //Optional payloads
         [XmlElement]
-        public VMImage image;
+        public string rfc_command;  //network command
+        [XmlAttribute]
+        public Parameter[] parameters; //command parameters
         [XmlElement]
+        public Image image; //image frame
+        [XmlAttribute]
+        public FrameID fid; //id for image frame
+        [XmlAttribute]
+        public VMNetwork network; //network model
+
+        //Message SRC/DEST info
+        [XmlAttribute]
         public AddressClass srcAddr;
-        [XmlElement]
+        [XmlAttribute]
         public AddressClass dstAddr;
 
     }
 
-    public class VMImage
+    [QS.Fx.Reflection.ValueClass("2`1", "VMImage")]
+    public sealed class VMImage
     {
 
     }
 
-    public class Parameter
+    [QS.Fx.Reflection.ValueClass("3`1", "Parameter")]
+    public sealed class Parameter
     {
-        string description;
-        int param;
+        Parameter(string name,string val)
+        {
+            this.name = name;
+            this.val = val;
+        }
+        Parameter()
+        {
+
+        }
+        [XmlElement]
+        public string name;
+        [XmlElement]
+        public string val;
     }
 
-    public class AddressClass
+    [QS.Fx.Reflection.ValueClass("4`1", "VMAddress")]
+    public sealed class VMAddress
     {
-        int[] id;
-        int type;
+        VMAddress(VMid[] id)
+        {
+            this.id = id;
+        }
+
+        VMAddress()
+        {
+
+        }
+        [XmlAttribute]
+        public VMid[] id; //source or destination address.. can be multi-part... next/prev should be in id[0] and should be updated/routed accordingly
+
+        [XmlAttribute]
+        public bool notSet;
     }
+
+    //null class to force ignore of checkpoint packets
+    [QS.Fx.Reflection.ValueClass("5`1", "NullC")]
+    public sealed class NullC
+    {
+        public NullC()
+        {
+        }
+    }
+
+    [QS.Fx.Reflection.ValueClass("6`1", "FrameID")]
+    public sealed class FrameID
+    {
+        FrameID(DateTime time,int id)
+        {
+            this.time = time;
+            this.id = id;
+        }
+
+        FrameID()
+        {
+         
+        }
+        [XmlAttribute]
+        public DateTime time;
+        [XmlElement]
+        public int id;
+         
+    }
+
+    [QS.Fx.Reflection.ValueClass("7`1", "VMNetwork")]
+    public sealed class VMNetwork
+    {
+        VMNetwork(VMService[] services)
+        {
+            this.services = services;
+        }
+
+        VMNetwork()
+        {
+               
+        }
+        [XmlAttribute]
+        public VMService[] services; //local services
+
+    }
+
+    [QS.Fx.Reflection.ValueClass("8`1", "VMService")]
+    public sealed class VMService
+    {
+        VMService(VMAddress addr,int svc_type,int svc_avail,VMService subServices)
+        {
+            this.svc_type = svc_type;
+            this.svc_avail = svc_avail;
+        }
+
+        VMService()
+        {
+
+        }
+
+        public class ServiceType
+        {
+            //video source service provider
+            public const int SVC_TYPE_VIDEO_SOURCE = 1;
+            //video server service provider
+            public const int SVC_TYPE_VIDEO_SERVER = 2;
+            //video viewer service provider
+            public const int SVC_TYPE_VIDEO_VIEWER = 4;
+        }
+
+        public class AvailService
+        {
+            //video source services
+            public const int SVC_AVAIL_VIDEO_SOURCE = 1; //video camera source
+            public const int SVC_AVAIL_PZT_CAMERA_C = 2; //pan-zoom-tilt compatable camera
+            //video server services
+            public const int SVC_AVAIL_VIDEO_MUX_DX = 4; //video / command mux
+            public const int SVC_AVAIL_VFRAME_CNTRL = 8; //frame rate control
+            //video viewer services
+            public const int SVC_AVAIL_VIEWER_USR_C = 16; //viewer availiable
+        }
+        [XmlAttribute]
+        public VMAddress svc_addr; //service address for re-refrence
+
+        [XmlElement]
+        public int svc_type;  //local service type
+
+        [XmlElement]
+        public int svc_avail; //availiable sub-services
+
+        [XmlAttribute]
+        public VMService[] subServices; //for server element, holds services of adjacent channel availiable
+    }
+
+    public sealed class VMAlarm
+    {
+        VMAlarm(DateTime expires,VMMessage toSend)
+        {
+            this.expires = expires;
+            this.message = toSend;
+
+        }
+
+        VMAlarm()
+        {
+
+        }
+
+        public DateTime expires; //expiration of alarm
+
+        public VMMessage message; //message to be sent after alarm expires if not removed
+    }
+
+    public class AlarmComparer : System.Collections.IComparer
+    {
+
+        // Calls CaseInsensitiveComparer.Compare with the parameters reversed.
+        int System.Collections.IComparer.Compare(Object x, Object y)
+        {
+            return DateTime.Compare(((VMAlarm)y).expires, ((VMAlarm)x).expires); // we want y to be bigger than x, thus x happens sooner
+        }
+
+    }
+
 }
