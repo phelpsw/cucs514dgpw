@@ -75,7 +75,7 @@ namespace VideoMonitor_Proj3
         private bool isInitialized = false;
 
         //local copy of the network configuration
-        private VMNetwork network;
+        public VMNetwork network;
 
         //local address
         private VMAddress myAddress;
@@ -100,7 +100,7 @@ namespace VideoMonitor_Proj3
         //message queue for incoming recieved messages
         private Queue<VMMessage> incoming = new Queue<VMMessage>();
 
-        //Queue to allow timer timeouts on locks.
+        //Queue to allow timer timeouts on alarms.
         private PriorityQueue alarmTimers;
 
         //List of Active Alarms (refrenced by Alarms.toString() method as keys
@@ -108,10 +108,10 @@ namespace VideoMonitor_Proj3
 
 
         //List of Viewable Messages (ordered by insertion)
-        private List<VMMessage> messageList = new List<VMMessage>();
+        //private List<VMMessage> messageList = new List<VMMessage>();
 
         //Index to Viewable Messages (not necissarily ordered correctly, but easily referenced)
-        private IDictionary<string, VMMessage> messageIndex = new Dictionary<string, VMMessage>();
+        //private IDictionary<string, VMMessage> messageIndex = new Dictionary<string, VMMessage>();
 
 
 
@@ -134,11 +134,11 @@ namespace VideoMonitor_Proj3
                     //send message
                     this.channelendpoint.Interface.Send(msg);
                 }
-                //ad an alarm to resend the request the given number of times after waiting the specified time.
 
+                //ad an alarm to resend the request the given number of times after waiting the specified time.
                 AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
                     DateTime.Now.AddMilliseconds(VMMsgConfig.netowrk_model_wait_ttl), VMMsgConfig.netowrk_model_wait_ttl, //set delay
-                    msg, setAsRoot,null,false)); //message and callback stuff
+                    msg, setAsRoot,null,false)); //message and callback stuff w/ repeat
             }
         }
 
@@ -338,13 +338,21 @@ namespace VideoMonitor_Proj3
                                 //extract my address from the network, last id +1 !
                                 myAddress = msg.network.services[msg.network.services.GetLength(0)].svc_addr.id[0]+1;
 
+                                //remove alarm in system:
+                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
+                                foreach (VMAlarm alarm in alarms)
+                                {
+                                    alarmList.Remove(alarm.toString());
+                                    alarmTimers.Remove(alarm);
+                                }
+                                //now add self to the network object
                                 VMService mySvc = rasterMyService(); //get my local service
 
                                 network.services += mySvc; //add myself to the local network
 
                                 Array.Sort(network.services, scmp); //sort the local network by id
 
-                                //expose self to network
+                                //finally, expose self to network
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, //message type
                                     messages++, DateTime.Now, //message id and time sent
                                     null, null, //payload relating to control message    (parameters, command,)
@@ -442,27 +450,33 @@ namespace VideoMonitor_Proj3
         void IVMCommInt.SendFrame(VMImage frame, FrameID id) //send a frame 
         {
             //send frame message
-            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, myAddress, null, 1, 1));
+            if(this.isInitialized)
+                this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, null, myAddress, null, 1, 1));
         }
 
         void IVMCommInt.SendGlobalCommand(string rfc_command, Parameter[] parameters)
         {
             //send command w/ no destination
-            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, myAddress, null, 1, 1));
+            if (this.isInitialized)
+                this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, null, myAddress, null, 1, 1));
         }
 
         void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, Parameter[] parameters)
         {
             //send command with given destination
-            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, myAddress, dest, 1, 1));
+            if (this.isInitialized)
+                this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, null, myAddress, dest, 1, 1));
         }
 
         void IVMCommInt.SendLocalServices(VMService service)
         {
-            //update local address
-            service.svc_addr = myAddress;
-            //send local service to network (forces update over network)
-            this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, messages++, DateTime.Now, null, null, null, null, service, myAddress, null, 1, 1));
+            if (this.isInitialized)
+            {
+                //update local address
+                service.svc_addr = myAddress;
+                //send local service to network (forces update over network)
+                this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, messages++, DateTime.Now, null, null, null, null, service, null, myAddress, null, 1, 1));
+            }
         }
 
         VMService[] IVMCommInt.GetNetworkServices()
