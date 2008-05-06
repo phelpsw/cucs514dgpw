@@ -57,7 +57,7 @@ namespace VideoMonitor_Proj3
         #region IVMAppFunc Members
 
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+        void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
             if (origID == sourceSPID)
                 viewerStreamEndPoint.Interface.SendFrame(frame, id);
