@@ -81,6 +81,8 @@
     <Compile Include="VMImage.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="channels\00000000000000000000000000000100\metadata.xml" />
+    <Content Include="channels\00000000000000000000000000000101\metadata.xml" />
     <Content Include="liveobjects\VideoViewer.liveobject" />
     <Content Include="liveobjects\VideoSource.liveobject" />
     <Content Include="liveobjects\VideoServer.liveobject" />
