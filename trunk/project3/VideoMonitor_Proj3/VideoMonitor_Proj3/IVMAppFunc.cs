@@ -15,7 +15,7 @@ namespace VideoMonitor_Proj3
         void Ready();
 
         [QS.Fx.Reflection.Operation("RecieveFrame")]
-        void RecieveFrame(Image frame, FrameID id, string origID);
+        void RecieveFrame(VMImage frame, FrameID id, string origID);
 
         [QS.Fx.Reflection.Operation("RecieveCommand")]
         void RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID);

@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, Image image, FrameID fid, VMService service, AddressClass srcAddr, AddressClass dstAddr,int count,int max_count)
+        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, AddressClass srcAddr, AddressClass dstAddr,int count,int max_count)
         {
             this.type = type;
             this.id = id;
@@ -39,6 +39,7 @@ namespace VideoMonitor_Proj3
             this.rfc_command = rfc_command;
             this.image = image;
             this.service = service;
+            this.network = network;
             this.srcAddr = srcAddr;
             this.dstAddr = dstAddr;
             this.first =  first;
@@ -68,7 +69,7 @@ namespace VideoMonitor_Proj3
         [XmlAttribute]
         public Parameter[] parameters; //command parameters
         [XmlElement]
-        public Image image; //image frame
+        public VMImage image; //image frame
         [XmlAttribute]
         public FrameID fid; //id for image frame
         [XmlAttribute]
@@ -81,12 +82,6 @@ namespace VideoMonitor_Proj3
         public AddressClass srcAddr;
         [XmlAttribute]
         public AddressClass dstAddr;
-
-    }
-
-    [QS.Fx.Reflection.ValueClass("2`1", "VMImage")]
-    public sealed class VMImage
-    {
 
     }
 
@@ -226,12 +221,13 @@ namespace VideoMonitor_Proj3
 
     public sealed class VMAlarm
     {
-        public VMAlarm(int type, DateTime expires, VMMessage toSend, VMAlarmCallback callback, Parameter[] callbackParams)
+        public VMAlarm(int type, DateTime expires, int delay, VMMessage toSend, VMAlarmCallback callback, Parameter[] callbackParams, bool repeats)
         {
             this.expires = expires;
             this.type = type;
             this.message = toSend;
-
+            this.repeats = repeats;
+            this.delay = delay;
             if (callback != null)
             {
                 this.callback = new VMAlarmCallback(callback);
@@ -256,11 +252,15 @@ namespace VideoMonitor_Proj3
 
         public DateTime expires; //expiration of alarm
 
+        public int delay; //in ms : delay of alarm (only necissary if repeats)
+
         public VMMessage message; //message to be sent after alarm expires if not removed
 
         public VMAlarmCallback callback; //callback to be called on expiration
 
         public Parameter[] callbackParams; //parameters to be passed to callback function
+
+        public bool repeats; //if alarm is to repeat
     }
 
     public class AlarmComparer : System.Collections.IComparer
@@ -270,6 +270,17 @@ namespace VideoMonitor_Proj3
         int System.Collections.IComparer.Compare(Object x, Object y)
         {
             return DateTime.Compare(((VMAlarm)y).expires, ((VMAlarm)x).expires); // we want y to be bigger than x, thus x happens sooner
+        }
+
+    }
+
+    public class ServiceComparer : System.Collections.IComparer
+    {
+
+        // Calls CaseInsensitiveComparer.Compare with the parameters reversed.
+        int System.Collections.IComparer.Compare(Object x, Object y)
+        {
+            return DateTime.Compare(((VMService)y).svc_addr.id[0], ((VMService)x).svc_addr.id[0]); // we want y to be bigger than x, thus x happens sooner
         }
 
     }
