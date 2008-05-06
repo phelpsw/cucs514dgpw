@@ -23,11 +23,18 @@ namespace VideoMonitor_Proj3
             this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
             this.streamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
             this.sourceConnection = this.streamEndPoint.Connect(streamProcessor.Object.VideoProcessor);
+        
+            // Define static image for testing
+            static_image = new VMImage();
+            static_image.Picture = getNetworkImage("http://www.westphalfamily.com/webcam.jpg");
         }
 
         private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
         private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> streamEndPoint;
         private QS.Fx.Endpoint.IConnection sourceConnection;
+
+        private VMImage static_image;
+        
 
         #region IUI Members
 
@@ -42,7 +49,7 @@ namespace VideoMonitor_Proj3
         #region IVMAppFunc Members
 
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+        void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         { // ignore
         }
 
@@ -62,5 +69,49 @@ namespace VideoMonitor_Proj3
         }
 
         #endregion
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            this.streamEndPoint.Interface.SendFrame(static_image, new FrameID(DateTime.Now, 0));
+        }
+
+        private void startStream_Click(object sender, EventArgs e)
+        {
+            timer1.Enabled = true;
+        }
+
+        private void endStream_Click(object sender, EventArgs e)
+        {
+            timer1.Enabled = false;
+        }
+
+        /* several image sources: http://webcams.goedgeluk.nl/list.html */
+        // Altadena ca, http://www.westphalfamily.com/webcam.jpg
+        // sjsu: http://www.met.sjsu.edu/cam_directory/latest.jpg
+        private Bitmap getNetworkImage(string sourceURL)
+        {
+            //string sourceURL = "http://webcam.mmhk.cz/axis-cgi/jpg/image.cgi";
+            byte[] buffer = new byte[100000];
+            int read, total = 0;
+            // create HTTP request
+
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
+            // get response
+
+            WebResponse resp = req.GetResponse();
+            // get response stream
+
+            Stream stream = resp.GetResponseStream();
+            // read data from stream
+
+            while ((read = stream.Read(buffer, total, 1000)) != 0)
+            {
+                total += read;
+            }
+            // get bitmap
+
+            Bitmap bmp = (Bitmap)Bitmap.FromStream(
+                          new MemoryStream(buffer, 0, total));
+        }
     }
 }
