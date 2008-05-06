@@ -42,7 +42,6 @@ namespace VideoMonitor_Proj3
             this.network = network;
             this.srcAddr = srcAddr;
             this.dstAddr = dstAddr;
-            this.first =  first;
             this.fid = fid;
             this.count = count;
             this.max_count = max_count;
@@ -232,12 +231,13 @@ namespace VideoMonitor_Proj3
             {
                 this.callback = new VMAlarmCallback(callback);
                 this.callbackParams = callbackParams;
-            }
+           }
+           id = System.Guid.NewGuid().ToString();
         }
 
         public VMAlarm()
         {
-
+            id = System.Guid.NewGuid().ToString();
         }
 
         public class AlarmType
@@ -261,6 +261,8 @@ namespace VideoMonitor_Proj3
         public Parameter[] callbackParams; //parameters to be passed to callback function
 
         public bool repeats; //if alarm is to repeat
+
+        public string id;
     }
 
     public class AlarmComparer : System.Collections.IComparer
@@ -280,7 +282,7 @@ namespace VideoMonitor_Proj3
         // Calls CaseInsensitiveComparer.Compare with the parameters reversed.
         int System.Collections.IComparer.Compare(Object x, Object y)
         {
-            return DateTime.Compare(((VMService)y).svc_addr.id[0], ((VMService)x).svc_addr.id[0]); // we want y to be bigger than x, thus x happens sooner
+            return ((VMService)y).svc_addr.id[0] - ((VMService)x).svc_addr.id[0]; // we want y to be bigger than x, thus x happens sooner
         }
 
     }

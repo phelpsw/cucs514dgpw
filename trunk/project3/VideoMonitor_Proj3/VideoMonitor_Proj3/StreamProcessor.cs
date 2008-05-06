@@ -47,22 +47,22 @@ namespace VideoMonitor_Proj3
 
        
         //Configure Message Behaviors Here
-        enum VMMsgConfig
+        public class VMMsgConfig
         {
             //Standard time between check for expired alarms
-            alarmCheck = 100,
+            public const int alarmCheck = 100;
 
             //standard time between checks of parent
-            parent_live_check_delay = 2000,
+            public const int parent_live_check_delay = 2000;
             //timeout on check responses before repeat
-            parent_live_check_ttl = 200,
+            public const int parent_live_check_ttl = 200;
             //number of times to parent doesn't respond before listing as dead
-            parent_live_check_count = 3,
+            public const int parent_live_check_count = 3;
 
             //time to wait for reponses to network status packet before repeat
-            netowrk_model_wait_ttl = 200,
+            public const int netowrk_model_wait_ttl = 200;
             //number of times to attempt request of status packet before marking dead and asking again
-            netowrk_model_wait_count = 3
+            public const int netowrk_model_wait_count = 3;
 
         }
 
@@ -88,6 +88,9 @@ namespace VideoMonitor_Proj3
 
         //threading timer to handle calls to the timer class.
         private System.Threading.Timer timer = null;
+
+        //threading timer to handle calls to the timer class.
+        private System.Threading.Thread digester = null;
 
 
         /** STRUCTURES TO HANDLE MESSAGE MANIPULATION AND FLOW **/
@@ -121,19 +124,16 @@ namespace VideoMonitor_Proj3
             if (!isInitialized)
             {
                 //broadcast network query message
-                lock (messages)
-                {
-                    //create message
-                    VMMessage msg = new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK, //message type
-                        messages++, DateTime.Now, //message id and time sent
-                        null, null, //payload relating to control message    (parameters, command,)
-                        null, null, //payload relating to image frame        (image, frameid,)
-                        null, null, //payload relating to service or network (service, network,)
-                        null, null, //message addressing information         (source, destination,)
-                        1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
-                    //send message
-                    this.channelendpoint.Interface.Send(msg);
-                }
+                //create message
+                VMMessage msg = new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK, //message type
+                    messages++, DateTime.Now, //message id and time sent
+                    null, null, //payload relating to control message    (parameters, command,)
+                    null, null, //payload relating to image frame        (image, frameid,)
+                    null, null, //payload relating to service or network (service, network,)
+                    null, null, //message addressing information         (source, destination,)
+                    1, VMMsgConfig.netowrk_model_wait_ttl); //send counters (count, maximum count)
+                //send message
+                this.channelendpoint.Interface.Send(msg);
 
                 //ad an alarm to resend the request the given number of times after waiting the specified time.
                 AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
@@ -158,10 +158,10 @@ namespace VideoMonitor_Proj3
 
 
         //callback if no response is recieved from network request from networkReady
-        public static void setAsRoot(Parameter[] parameters)
+        public void setAsRoot(Parameter[] parameters)
         {
             //initialize my address
-            this.myAddress = new VMAddress(new int[] { 0 });
+            myAddress = new VMAddress(new int[] { 0 });
 
             VMService svc = rasterMyService(); //collects components of local service model
 
@@ -178,7 +178,7 @@ namespace VideoMonitor_Proj3
 
             foreach (VMAlarm l in alarmList.Values)
             {
-                if (l.message.id.toString() == msg_id.toString())
+                if (l.message.id == msg_id)
                 {
                     list.Add(l);
                 }
@@ -213,7 +213,7 @@ namespace VideoMonitor_Proj3
             alarmTimers.Enqueue(alarm);
 
             //add alarm to the indexed list
-            alarmList.Add(alarm.ToString(), alarm);
+            alarmList.Add(alarm.id, alarm);
 
             if (timer == null) StartTimer(); //timer not currently running, start it
         }
@@ -247,13 +247,13 @@ namespace VideoMonitor_Proj3
                             }
                             else //resend
                             {
-                                VMMessage msg = alarm.message;
-                                this.channelendpoint.Interface.Send(msg);
+                                VMMessage alm_msg = alarm.message;
+                                this.channelendpoint.Interface.Send(alm_msg);
                             }
                             break;
                     }
                     //remove alarm from the queue and from the listist
-                    alarmList.Remove(alarm.toString());
+                    alarmList.Remove(alarm.id);
 
                     //reinsert alarm if it repeats
                     if (alarm.repeats)
@@ -262,7 +262,7 @@ namespace VideoMonitor_Proj3
                         AddAlarm(alarm);
                     }
                 }
-                if (alarmList.Count == 0 && !editState) StopTimer(); //end the timer if none remain
+                if (alarmList.Count == 0) StopTimer(); //end the timer if none remain
             }
             //end, will be relaunched in delta* time
         }
@@ -274,14 +274,14 @@ namespace VideoMonitor_Proj3
         //METHOD TO BEGIN MESSAGE DIGESTER THREAD (runs on form thread)
         private void StartDigester()
         {
-            if (this.InvokeRequired)
-                this.BeginInvoke(new EventHandler(this.Digester), null);
-            else
-                this.Digester(null, null);
+            if(digester.IsAlive) {
+                digester = new Thread (new ThreadStart( Digester ));
+                digester.Start();
+            }
         }
 
         //Clears out the message queue of new meessages and routes them according to type and parameters
-        private void Digester(object sender, EventArgs args)
+        private void Digester()
         {
             lock (incoming)
             {
@@ -336,19 +336,19 @@ namespace VideoMonitor_Proj3
                             {
                                 network = msg.network; //set my local netowrk
                                 //extract my address from the network, last id +1 !
-                                myAddress = msg.network.services[msg.network.services.GetLength(0)].svc_addr.id[0]+1;
+                                myAddress.id[0] = msg.network.services[msg.network.services.GetLength(0)].svc_addr.id[0]+1;
 
                                 //remove alarm in system:
                                 List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
                                 foreach (VMAlarm alarm in alarms)
                                 {
-                                    alarmList.Remove(alarm.toString());
+                                    alarmList.Remove(alarm.id);
                                     alarmTimers.Remove(alarm);
                                 }
                                 //now add self to the network object
                                 VMService mySvc = rasterMyService(); //get my local service
 
-                                network.services += mySvc; //add myself to the local network
+                                network.services[network.services.GetLength(0)] = mySvc; //add myself to the local network
 
                                 Array.Sort(network.services, scmp); //sort the local network by id
 
@@ -391,7 +391,7 @@ namespace VideoMonitor_Proj3
                                 List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
                                 foreach (VMAlarm alarm in alarms)
                                 {
-                                    alarmList.Remove(alarm.toString());
+                                    alarmList.Remove(alarm.id);
                                     alarmTimers.Remove(alarm);
                                 }
 
@@ -404,9 +404,9 @@ namespace VideoMonitor_Proj3
                             {
                                 //check if service exists: 
                                 int pos = checkExistingService(msg.service.svc_addr);
-                                if (pos == null) //doesn't exist
+                                if (pos == -1) //doesn't exist
                                 {
-                                    network.services += msg.service; //addto list
+                                    network.services[network.services.GetLength(0)] = msg.service; //addto list
                                 }
                                 else //exists already
                                 {
@@ -428,7 +428,7 @@ namespace VideoMonitor_Proj3
                 if (network.services[i].svc_addr.id.ToString() == addr.id.ToString())
                     return i;
             }
-            return null;
+            return -1;
         }
 
         /** END DIGESTOR FUNCTIONS **/
@@ -507,19 +507,16 @@ namespace VideoMonitor_Proj3
         void QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Receive(VMMessage _message)
         {
             //upon receiving a message, simply throw it into the queue and let the digester pick it up
-            if (this.InvokeRequired)
+            //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
+            if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && _message.srcAddr.id[0]!=myAddress.id[0])
             {
-                //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
-                if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && _message.srcAddr.id[0]!=myAddress.id[0])
+                bool pendingcallback = incoming.Count > 0;
+                lock (incoming)
                 {
-                    bool pendingcallback = incoming.Count > 0;
-                    lock (incoming)
-                    {
-                        incoming.Enqueue(_message);
-                    }
-                    if (!pendingcallback)
-                        this.StartDigester();
+                    incoming.Enqueue(_message);
                 }
+                if (!pendingcallback)
+                    this.StartDigester();
             }
         }
 
