@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type,int id, DateTime sent, Parameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, AddressClass srcAddr, AddressClass dstAddr,int count,int max_count)
+        public VMMessage(int type, int id, DateTime sent, Parameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, VMAddress srcAddr, VMAddress dstAddr, int count, int max_count)
         {
             this.type = type;
             this.id = id;
