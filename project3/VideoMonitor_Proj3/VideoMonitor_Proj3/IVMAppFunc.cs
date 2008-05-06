@@ -15,7 +15,7 @@ namespace VideoMonitor_Proj3
         void RecieveFrame(VMImage frame, FrameID id, string origID);
 
         [QS.Fx.Reflection.Operation("RecieveCommand")]
-        void RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID);
+        void RecieveCommand(VMAddress src, string rfc_command, VMParameter[] parameters, string origID);
 
         //should return the VMService object of the local service
         [QS.Fx.Reflection.Operation("GetLocalService")]

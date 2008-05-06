@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type, int id, DateTime sent, Parameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, VMAddress srcAddr, VMAddress dstAddr, int count, int max_count)
+        public VMMessage(int type, int id, DateTime sent, VMParameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, VMAddress srcAddr, VMAddress dstAddr, int count, int max_count)
         {
             this.type = type;
             this.id = id;
@@ -66,7 +66,7 @@ namespace VideoMonitor_Proj3
         [XmlElement]
         public string rfc_command;  //network command
         [XmlAttribute]
-        public Parameter[] parameters; //command parameters
+        public VMParameter[] parameters; //command parameters
         [XmlElement]
         public VMImage image; //image frame
         [XmlAttribute]
@@ -84,15 +84,15 @@ namespace VideoMonitor_Proj3
 
     }
 
-    [QS.Fx.Reflection.ValueClass("3`1", "Parameter")]
-    public sealed class Parameter
+    [QS.Fx.Reflection.ValueClass("9`1", "VMParameter")]
+    public sealed class VMParameter
     {
-        public Parameter(string name, string val)
+        public VMParameter(string name, string val)
         {
             this.name = name;
             this.val = val;
         }
-        public Parameter()
+        public VMParameter()
         {
 
         }
@@ -216,11 +216,11 @@ namespace VideoMonitor_Proj3
     }
 
     //deligate callback type for alarms
-    public delegate void VMAlarmCallback(Parameter[] parameters);
+    public delegate void VMAlarmCallback(VMParameter[] parameters);
 
     public sealed class VMAlarm
     {
-        public VMAlarm(int type, DateTime expires, int delay, VMMessage toSend, VMAlarmCallback callback, Parameter[] callbackParams, bool repeats)
+        public VMAlarm(int type, DateTime expires, int delay, VMMessage toSend, VMAlarmCallback callback, VMParameter[] callbackParams, bool repeats)
         {
             this.expires = expires;
             this.type = type;
@@ -258,7 +258,7 @@ namespace VideoMonitor_Proj3
 
         public VMAlarmCallback callback; //callback to be called on expiration
 
-        public Parameter[] callbackParams; //parameters to be passed to callback function
+        public VMParameter[] callbackParams; //parameters to be passed to callback function
 
         public bool repeats; //if alarm is to repeat
 

@@ -158,7 +158,7 @@ namespace VideoMonitor_Proj3
 
 
         //callback if no response is recieved from network request from networkReady
-        public void setAsRoot(Parameter[] parameters)
+        public void setAsRoot(VMParameter[] parameters)
         {
             //initialize my address
             myAddress = new VMAddress(new int[] { 0 });
@@ -320,7 +320,7 @@ namespace VideoMonitor_Proj3
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
                                     messages++, DateTime.Now, //message id and time sent
-                                    new Parameter[] { new Parameter("rcv_id", msg.id.ToString()) }, null, //payload relating to control message    (parameters, command,)
+                                    new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }, null, //payload relating to control message    (parameters, command,)
                                     null, null, //payload relating to image frame        (image, frameid,)
                                     null, network, //payload relating to service or network (service, network,)
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
@@ -373,7 +373,7 @@ namespace VideoMonitor_Proj3
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
                                     messages++, DateTime.Now, //message id and time sent
-                                    new Parameter[] {new Parameter("rcv_id",msg.id.ToString())}, null, //payload relating to control message    (parameters, command,)
+                                    new VMParameter[] {new VMParameter("rcv_id",msg.id.ToString())}, null, //payload relating to control message    (parameters, command,)
                                     null, null, //payload relating to image frame        (image, frameid,)
                                     null, null, //payload relating to service or network (service, network,)
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
@@ -454,14 +454,14 @@ namespace VideoMonitor_Proj3
                 this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, null, myAddress, null, 1, 1));
         }
 
-        void IVMCommInt.SendGlobalCommand(string rfc_command, Parameter[] parameters)
+        void IVMCommInt.SendGlobalCommand(string rfc_command, VMParameter[] parameters)
         {
             //send command w/ no destination
             if (this.isInitialized)
                 this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, null, myAddress, null, 1, 1));
         }
 
-        void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, Parameter[] parameters)
+        void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, VMParameter[] parameters)
         {
             //send command with given destination
             if (this.isInitialized)

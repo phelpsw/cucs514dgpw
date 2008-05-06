@@ -18,10 +18,10 @@ namespace VideoMonitor_Proj3
         void SendFrame(VMImage frame, FrameID id);
 
         [QS.Fx.Reflection.Operation("SendGlobalCommand")]
-        void SendGlobalCommand(string rfc_command, Parameter[] parameters);
+        void SendGlobalCommand(string rfc_command, VMParameter[] parameters);
 
         [QS.Fx.Reflection.Operation("SendCommand")]
-        void SendCommand(VMAddress dest, string rfc_command, Parameter[] parameters);
+        void SendCommand(VMAddress dest, string rfc_command, VMParameter[] parameters);
 
         [QS.Fx.Reflection.Operation("SendLocalServices")]
         void SendLocalServices(VMService service);

@@ -49,7 +49,7 @@ namespace VideoMonitor_Proj3
             pictureBox1.Image = frame.Picture;
         }
 
-        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID)
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameter[] parameters, string origID)
         {
             throw new NotImplementedException();
         }

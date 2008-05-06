@@ -9,7 +9,7 @@ using System.IO;
 
 namespace VideoMonitor_Proj3
 {
-    [QS.Fx.Reflection.ValueClass("2`1", "VMImage")]
+    [QS.Fx.Reflection.ValueClass("10`1", "VMImage")]
     public class VMImage
     {
         public VMImage(Bitmap img)
