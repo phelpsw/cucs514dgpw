@@ -51,7 +51,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Image.cs" />
     <Compile Include="IVideoStream.cs" />
     <Compile Include="IVMAppFunc.cs" />
     <Compile Include="IVMCommInt.cs" />
@@ -92,6 +91,7 @@
   <ItemGroup>
     <EmbeddedResource Include="VideoServer.resx">
       <DependentUpon>VideoServer.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="VideoSource.resx">
       <DependentUpon>VideoSource.cs</DependentUpon>
@@ -99,6 +99,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="VideoViewer.resx">
       <DependentUpon>VideoViewer.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

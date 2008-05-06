@@ -5,9 +5,6 @@ using System.Text;
 
 namespace VideoMonitor_Proj3
 {
-    class IVMAppFunc
-    {
-    }
     [QS.Fx.Reflection.InterfaceClass("2`1", "VMAppFunc")]
     public interface IVMAppFunc : QS.Fx.Interface.Classes.IInterface
     {

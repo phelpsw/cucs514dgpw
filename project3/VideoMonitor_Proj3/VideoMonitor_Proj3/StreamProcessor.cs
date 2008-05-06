@@ -478,7 +478,7 @@ namespace VideoMonitor_Proj3
 
         #region ICheckpointedCommunicationChannelClient<IMessage, IChatState> Members
 
-        IChatState QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Checkpoint()
+        NullC QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Checkpoint()
         {
             //does nothing...
             return new NullC();
