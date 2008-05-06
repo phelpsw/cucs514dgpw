@@ -80,12 +80,6 @@ namespace VideoMonitor_Proj3
         //local address
         private VMAddress myAddress;
 
-        //number of nodes in the system
-        private int nodes;
-
-        //node number of this node
-        private int myNodeNum = 0;
-
         //number of messages that have been sent by this node;
         private int messages = 0;
         
@@ -100,6 +94,8 @@ namespace VideoMonitor_Proj3
 
         //comparison operator for PriorityQueue
         private AlarmComparer acmp = new AlarmComparer();
+
+        private ServiceComparer scmp = new ServiceComparer();
 
         //message queue for incoming recieved messages
         private Queue<VMMessage> incoming = new Queue<VMMessage>();
@@ -128,32 +124,51 @@ namespace VideoMonitor_Proj3
                 lock (messages)
                 {
                     //create message
-                    VMMessage msg = new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK, messages++, DateTime.Now, null, null, null, null, null, null, null, 1, VMMsgConfig.netowrk_model_wait_count);
+                    VMMessage msg = new VMMessage(messageType.MSG_TYPE_REQUEST_NETWORK, //message type
+                        messages++, DateTime.Now, //message id and time sent
+                        null, null, //payload relating to control message    (parameters, command,)
+                        null, null, //payload relating to image frame        (image, frameid,)
+                        null, null, //payload relating to service or network (service, network,)
+                        null, null, //message addressing information         (source, destination,)
+                        1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
                     //send message
                     this.channelendpoint.Interface.Send(msg);
                 }
                 //ad an alarm to resend the request the given number of times after waiting the specified time.
 
                 AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
-                    DateTime.Now.AddMilliseconds(VMMsgConfig.netowrk_model_wait_ttl), //set delay
-                    msg, setAsRoot, null)); //message and callback stuff
+                    DateTime.Now.AddMilliseconds(VMMsgConfig.netowrk_model_wait_ttl), VMMsgConfig.netowrk_model_wait_ttl, //set delay
+                    msg, setAsRoot,null,false)); //message and callback stuff
             }
         }
+
+        private VMService rasterMyService()
+        {
+            //collect service info from local service object
+            VMService mySvc = this.interfaceEndpoint.Interface.GetLocalService(this.instanceID);
+
+            //get my local address
+            mySvc.svc_addr = this.myAddress;
+
+            //get services on other side of any gateway (for server, otherwise null)
+            mySvc.subServices = this.interfaceEndpoint.Interface.GetRemoteServices(this.instanceID);
+
+            return mySvc;
+        }
+
 
         //callback if no response is recieved from network request from networkReady
         public static void setAsRoot(Parameter[] parameters)
         {
             //initialize my address
-            this.myAddress = new VMAddress(new int[] {0});
+            this.myAddress = new VMAddress(new int[] { 0 });
 
-            VMService mySvc = this.interfaceEndpoint.Interface.GetLocalService(this.instanceID);
- 
-            mySvc.svc_addr = this.myAddress;
-
-            mySvc.subServices = this.interfaceEndpoint.Interface.GetRemoteServices(this.instanceID);
+            VMService svc = rasterMyService(); //collects components of local service model
 
             //initialize network object
-            network = new VMNetwork(new VMService[] { mySvc });
+            network = new VMNetwork(new VMService[] { svc });
+
+            isInitialized = true;  //is now initialized and ready
         }
 
         //retrieve all of the alarms corrisponding to the given message id
@@ -163,7 +178,7 @@ namespace VideoMonitor_Proj3
 
             foreach (VMAlarm l in alarmList.Values)
             {
-                if (l.id.toString() == id.toString())
+                if (l.message.id.toString() == msg_id.toString())
                 {
                     list.Add(l);
                 }
@@ -215,17 +230,37 @@ namespace VideoMonitor_Proj3
                     //now route alarm
                     switch (alarm.type)
                     {
-                        case VMAlarm.AlarmType.ALM_TYPE_MESSAGE:
+                        case VMAlarm.AlarmType.ALM_TYPE_MESSAGE: //send message on expire
                             VMMessage msg = alarm.message;
-                            msg.sent++; //incriment sent count
+                            this.channelendpoint.Interface.Send(msg);
                             break;
 
-                        case VMAlarm.AlarmType.ALM_TYPE_CALLBCK:
+                        case VMAlarm.AlarmType.ALM_TYPE_CALLBCK: //simply call method on expirie
+                            alarm.callback(alarm.callbackParams);
+                            break;
+
+                        case VMAlarm.AlarmType.ALM_TYPE_CONTMSG:
+                            alarm.message.count++;
+                            if (alarm.message.count > alarm.message.max_count) //if max number of attempts reached, run callback function
+                            {
+                                alarm.callback(alarm.callbackParams);
+                            }
+                            else //resend
+                            {
+                                VMMessage msg = alarm.message;
+                                this.channelendpoint.Interface.Send(msg);
+                            }
                             break;
                     }
-
                     //remove alarm from the queue and from the listist
                     alarmList.Remove(alarm.toString());
+
+                    //reinsert alarm if it repeats
+                    if (alarm.repeats)
+                    {
+                        alarm.expires = DateTime.Now.AddMilliseconds(alarm.delay);
+                        AddAlarm(alarm);
+                    }
                 }
                 if (alarmList.Count == 0 && !editState) StopTimer(); //end the timer if none remain
             }
@@ -255,107 +290,109 @@ namespace VideoMonitor_Proj3
                     VMMessage msg = incoming.Dequeue();
                     switch (msg.type)
                     {
-                        //Normal Frame Recieved
+                        /*MESSAGES DEALING WITH NON-NETWORK RELATED FUNCTIONS*/
+
+                        //control message recieved, pass to interface
+                        case messageType.MSG_TYPE_CONTROL_RFC:
+                            if (msg.rfc_command != null && isInitialized)
+                            {
+
+                            }
+                            break;
+
+                        //frame message recieved, pass to interface
                         case messageType.MSG_TYPE_SEND_FRAME:
-                            if (msg.image != null)
+                            if (msg.image != null && isInitialized)
                             {
                                 this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid,this.instanceID);
                             }
                             break;
 
+                        /*MESSAGES DEALING WITH NETWORK RELATED FUNCTIONS*/
+
+                        //when asked for the network, return local network model
+                        case messageType.MSG_TYPE_REQUEST_NETWORK:
+                            if (msg != null && isInitialized)
+                            {
+                                //create message
+                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
+                                    messages++, DateTime.Now, //message id and time sent
+                                    new Parameter[] { new Parameter("rcv_id", msg.id.ToString()) }, null, //payload relating to control message    (parameters, command,)
+                                    null, null, //payload relating to image frame        (image, frameid,)
+                                    null, network, //payload relating to service or network (service, network,)
+                                    myAddress, msg.srcAddr, //message addressing information         (source, destination,)
+                                    1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
+                                //send
+                                this.channelendpoint.Interface.Send(msg);
+                            }
+                            break;
 
                         //Network layout recieved, only react if ist first layout
                         case messageType.MSG_TYPE_RESPOND_NETWORK:
-                            if (msg.image != null)
+                            if (msg.network != null && !isInitialized) //only recieve once, before initialized
                             {
-                                this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid, this.instanceID) ;
+                                network = msg.network; //set my local netowrk
+                                //extract my address from the network, last id +1 !
+                                myAddress = msg.network.services[msg.network.services.GetLength(0)].svc_addr.id[0]+1;
+
+                                VMService mySvc = rasterMyService(); //get my local service
+
+                                network.services += mySvc; //add myself to the local network
+
+                                Array.Sort(network.services, scmp); //sort the local network by id
+
+                                //expose self to network
+                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, //message type
+                                    messages++, DateTime.Now, //message id and time sent
+                                    null, null, //payload relating to control message    (parameters, command,)
+                                    null, null, //payload relating to image frame        (image, frameid,)
+                                    mySvc, null, //payload relating to service or network (service, network,)
+                                    myAddress,null, //message addressing information         (source, destination,)
+                                    1, 1); //send counters (count, maximum count)
+                                //send
+                                this.channelendpoint.Interface.Send(msg);
+                                isInitialized = true;
                             }
                             break;
 
-                        //Lock Request
-                        case messageTypes.MSG_TYPE_LOCK:
-                            if (msg.Ilock != null)
+                        //when asked if still live, respond 
+                        case messageType.MSG_TYPE_CONFIRM_LIVE:
+                            if (msg.srcAddr != null && isInitialized)
                             {
-                                Lock exist;
-                                if (lockList.TryGetValue(msg.Ilock.toString(), out exist))
+                                //create message
+                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
+                                    messages++, DateTime.Now, //message id and time sent
+                                    new Parameter[] {new Parameter("rcv_id",msg.id.ToString())}, null, //payload relating to control message    (parameters, command,)
+                                    null, null, //payload relating to image frame        (image, frameid,)
+                                    null, null, //payload relating to service or network (service, network,)
+                                    myAddress, msg.srcAddr, //message addressing information         (source, destination,)
+                                    1, 1); //send counters (count, maximum count)
+                                //send
+                                this.channelendpoint.Interface.Send(msg);
+                            }
+                            break;
+
+                        //when confirmed live, remove any alarms associated with this request
+                        case messageType.MSG_TYPE_RESPOND_LIVE:
+                            if (msg.srcAddr != null && isInitialized)
+                            {
+                                //get any alarms associated w/ this message
+                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
+                                foreach (VMAlarm alarm in alarms)
                                 {
-                                    //does exist (remove current and replace w/ new) this allows leases to be extended
-                                    lockList.Remove(msg.Ilock.toString());
-                                    lockTimers.Remove(exist);
+                                    alarmList.Remove(alarm.toString());
+                                    alarmTimers.Remove(alarm);
                                 }
-                                //initalize timer
-                                msg.Ilock.expires = DateTime.Now.AddSeconds(msg.Ilock.time);
 
-                                //add lock to the timers list
-                                lockTimers.Enqueue(msg.Ilock);
-
-                                //add lock to the indexed list
-                                lockList.Add(msg.Ilock.toString(), msg.Ilock);
-
-                                if (timer == null) StartTimer(); //begin the timer thread
-
-                                this.Refresh(null, null); //redraw for new message
                             }
-                            else
+                            break;
+
+                        //when new network service recieved, add to network model
+                        case messageType.MSG_TYPE_EXPOSE_SVC:
+                            if (msg.srcAddr != null && isInitialized)
                             {
-                                //bad lock? dunno
-                                //-throw exception if needed
-                            }
-                            break;
 
-                        //Unlock / Update 
-                        case messageTypes.MSG_TYPE_UNLOCK:
-                            if (msg.Ilock != null)
-                            {
-                                Lock exist;
-                                if (lockList.TryGetValue(msg.Ilock.toString(), out exist))
-                                {
-                                    //does exist (remove current)
-                                    lockList.Remove(msg.Ilock.toString());
-                                    lockTimers.Remove(exist);
-
-                                    //update message
-                                    if (msg.message != null)
-                                    {
-                                        //rebuild text string
-                                        string text = messageIndex[msg.Ilock.id.toString()].text;
-                                        string begin = text.Substring(0, msg.Ilock.startC);
-                                        string end = text.Substring(msg.Ilock.endC);
-                                        string txt = begin + msg.message.text + end;
-                                        //finally set value
-                                        messageIndex[msg.Ilock.id.toString()].text = (txt != "" ? txt : " [message text deleted]");
-                                    }
-                                    else
-                                    {
-                                        //if message structure was null, delete this message
-                                        messageList.Remove(messageIndex[msg.Ilock.id.toString()]);
-                                        messageIndex.Remove(msg.Ilock.id.toString());
-                                    }
-                                }
-                                else
-                                {
-                                    //lock may have previously expired... shouldn't happen but concievably could...
-                                    //simply ignore in this case
-                                }
                             }
-                            else
-                            {
-                                //bad lock? dunno
-                                //-throw exception
-                            }
-                            this.Refresh(null, null); //redraw for new message
-                            break;
-
-                        //Handles update to network size
-                        case messageTypes.MSG_TYPE_EXPOSE:
-                            if (msg.value != 0)
-                                this.nodes = msg.value;
-                            break;
-                        case messageTypes.MSG_TYPE_LOAD_TEST:
-                            richTextBox1.Text = msg.message.id.toString() + "\r\n" + msg.message.text;
-                            break;
-                        default:
-                            //random message? ignore
                             break;
                     }
                 }
@@ -369,7 +406,7 @@ namespace VideoMonitor_Proj3
         //return if the network is ready to send
         bool IVMCommInt.Ready()
         {
-
+            return isInitialized;
         }
 
         //gets the local network configuration
@@ -378,7 +415,7 @@ namespace VideoMonitor_Proj3
             return network;
         }
 
-        void IVMCommInt.SendFrame(Image frame, FrameID id) //send a frame 
+        void IVMCommInt.SendFrame(VMImage frame, FrameID id) //send a frame 
         {
             //send frame message
             this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, myAddress, null, 1, 1));
