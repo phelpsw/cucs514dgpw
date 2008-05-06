@@ -288,6 +288,7 @@ namespace VideoMonitor_Proj3
                 while (incoming.Count > 0)
                 {
                     VMMessage msg = incoming.Dequeue();
+                    VMService local_svc = rasterMyService(); //get my local service info
                     switch (msg.type)
                     {
                         /*MESSAGES DEALING WITH NON-NETWORK RELATED FUNCTIONS*/
@@ -296,7 +297,8 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_CONTROL_RFC:
                             if (msg.rfc_command != null && isInitialized)
                             {
-
+                                //simply pass to endpoint
+                                this.interfaceEndpoint.Interface.RecieveCommand(msg.srcAddr, msg.rfc_command, msg.parameters, this.instanceID);
                             }
                             break;
 
@@ -304,6 +306,7 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_SEND_FRAME:
                             if (msg.image != null && isInitialized)
                             {
+                                //simply pass to endpointo
                                 this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid,this.instanceID);
                             }
                             break;
@@ -391,12 +394,33 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_EXPOSE_SVC:
                             if (msg.srcAddr != null && isInitialized)
                             {
-
+                                //check if service exists: 
+                                int pos = checkExistingService(msg.service.svc_addr);
+                                if (pos == null) //doesn't exist
+                                {
+                                    network.services += msg.service; //addto list
+                                }
+                                else //exists already
+                                {
+                                    network.services[pos] = msg.service; //place in existing position
+                                }
+                                Array.Sort(network.services, scmp); //sort the local network by id
                             }
                             break;
                     }
                 }
             }
+        }
+
+        //retrieve check to see if a service exists already, if so, return it's id in the list
+        public int checkExistingService(VMAddress addr)
+        {
+            for (int i=0;i<network.services.GetLength(0);i++)
+            {
+                if (network.services[i].svc_addr.id.ToString() == addr.id.ToString())
+                    return i;
+            }
+            return null;
         }
 
         /** END DIGESTOR FUNCTIONS **/
@@ -471,13 +495,17 @@ namespace VideoMonitor_Proj3
             //upon receiving a message, simply throw it into the queue and let the digester pick it up
             if (this.InvokeRequired)
             {
-                bool pendingcallback = incoming.Count > 0;
-                lock (incoming)
+                //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
+                if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && _message.srcAddr.id[0]!=myAddress.id[0])
                 {
-                    incoming.Enqueue(_message);
+                    bool pendingcallback = incoming.Count > 0;
+                    lock (incoming)
+                    {
+                        incoming.Enqueue(_message);
+                    }
+                    if (!pendingcallback)
+                        this.StartDigester();
                 }
-                if (!pendingcallback)
-                    this.StartDigester();
             }
         }
 
