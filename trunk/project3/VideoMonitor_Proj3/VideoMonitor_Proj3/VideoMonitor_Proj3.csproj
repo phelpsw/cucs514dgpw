@@ -78,6 +78,7 @@
       <DependentUpon>VideoViewer.cs</DependentUpon>
     </Compile>
     <Compile Include="ViewerState.cs" />
+    <Compile Include="VMImage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="liveobjects\VideoViewer.liveobject" />

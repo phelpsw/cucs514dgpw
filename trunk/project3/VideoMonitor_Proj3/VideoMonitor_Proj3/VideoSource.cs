@@ -6,6 +6,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Net;
+using System.IO;
 
 namespace VideoMonitor_Proj3
 {
@@ -48,9 +50,9 @@ namespace VideoMonitor_Proj3
 
         #region IVMAppFunc Members
 
-
+        // ignore
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
-        { // ignore
+        { 
         }
 
         void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, Parameter[] parameters, string origID)
@@ -65,6 +67,11 @@ namespace VideoMonitor_Proj3
 
         VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
+            return null;
+        }
+
+        void IVMAppFunc.Ready()
+        {
             throw new NotImplementedException();
         }
 
@@ -72,6 +79,10 @@ namespace VideoMonitor_Proj3
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            // display what is transmitted by this channel
+            pictureBox1.Image = static_image.Picture;
+
+            // send frame on source channel
             this.streamEndPoint.Interface.SendFrame(static_image, new FrameID(DateTime.Now, 0));
         }
 
@@ -112,6 +123,8 @@ namespace VideoMonitor_Proj3
 
             Bitmap bmp = (Bitmap)Bitmap.FromStream(
                           new MemoryStream(buffer, 0, total));
+            return bmp;
         }
+
     }
 }

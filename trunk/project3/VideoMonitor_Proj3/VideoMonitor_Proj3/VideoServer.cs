@@ -26,8 +26,6 @@ namespace VideoMonitor_Proj3
             [QS.Fx.Reflection.Parameter("viewerStreamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
             QS.Fx.Object.IReference<IVideoStream> viewerStreamProcessor)
         {
-            viewerSPID = viewerStreamProcessor.ID;
-            sourceSPID = sourceStreamProcessor.ID;
             InitializeComponent();
             this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
             this.sourceStreamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
@@ -41,9 +39,6 @@ namespace VideoMonitor_Proj3
         private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> viewerStreamEndPoint;
         private QS.Fx.Endpoint.IConnection sourceConnection;
         private QS.Fx.Endpoint.IConnection viewerConnection;
-
-        private string viewerSPID;
-        private string sourceSPID;
 
         #region IUI Members
 
@@ -59,7 +54,7 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
-            if (origID == sourceSPID)
+            if (origID == sourceStreamEndPoint.Interface.GetInstanceID())
                 viewerStreamEndPoint.Interface.SendFrame(frame, id);
         }
 
@@ -75,8 +70,19 @@ namespace VideoMonitor_Proj3
 
         VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
+            if (origID == sourceStreamEndPoint.Interface.GetInstanceID())
+                return sourceStreamEndPoint.Interface.GetNetworkServices();
+            else if (origID == viewerStreamEndPoint.Interface.GetInstanceID())
+                return viewerStreamEndPoint.Interface.GetNetworkServices();
+            else
+                return null; // we might want to throw an exception in this situation
+        }
+
+        void IVMAppFunc.Ready()
+        {
             throw new NotImplementedException();
         }
+
 
         #endregion
     }
