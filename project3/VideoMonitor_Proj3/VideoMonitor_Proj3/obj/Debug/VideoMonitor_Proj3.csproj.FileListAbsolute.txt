@@ -1,5 +1,0 @@
-C:\Documents and Settings\Da\Desktop\514 Project\project3\VideoMonitor_Proj3\VideoMonitor_Proj3\obj\Debug\ResolveAssemblyReference.cache
-C:\Documents and Settings\Da\Desktop\514 Project\project3\VideoMonitor_Proj3\VideoMonitor_Proj3\obj\Debug\VideoMonitor_Proj3.VideoServer.resources
-C:\Documents and Settings\Da\Desktop\514 Project\project3\VideoMonitor_Proj3\VideoMonitor_Proj3\obj\Debug\VideoMonitor_Proj3.VideoSource.resources
-C:\Documents and Settings\Da\Desktop\514 Project\project3\VideoMonitor_Proj3\VideoMonitor_Proj3\obj\Debug\VideoMonitor_Proj3.VideoViewer.resources
-C:\Documents and Settings\Da\Desktop\514 Project\project3\VideoMonitor_Proj3\VideoMonitor_Proj3\obj\Debug\VideoMonitor_Proj3.csproj.GenerateResource.Cache

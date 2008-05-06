@@ -40,7 +40,8 @@ namespace VideoMonitor_Proj3
 
         #region IVMAppFunc Members
 
-        void IVMAppFunc.RecieveFrame(Image frame, FrameID id, string origID)
+
+        void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
             // buffer image
             // use timer to grab from buffer
@@ -60,9 +61,15 @@ namespace VideoMonitor_Proj3
 
         VMService[] IVMAppFunc.GetRemoteServices(string origID)
         {
+            return null;
+        }
+
+        void IVMAppFunc.Ready()
+        {
             throw new NotImplementedException();
         }
 
         #endregion
+
     }
 }

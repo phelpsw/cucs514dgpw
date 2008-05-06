@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Xml.Serialization;
+using System.ComponentModel;
+using System.IO;
 
 namespace VideoMonitor_Proj3
 {
