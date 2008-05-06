@@ -79,9 +79,9 @@ namespace VideoMonitor_Proj3
 
         //Message SRC/DEST info
         [XmlAttribute]
-        public AddressClass srcAddr;
+        public VMAddress srcAddr;
         [XmlAttribute]
-        public AddressClass dstAddr;
+        public VMAddress dstAddr;
 
     }
 
