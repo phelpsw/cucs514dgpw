@@ -10,7 +10,7 @@ using LSCollections;
 
 namespace VideoMonitor_Proj3
 {
-    [QS.Fx.Reflection.ComponentClass("2`1", "StreamProcessor")]
+    [QS.Fx.Reflection.ComponentClass("4`1", "StreamProcessor")]
     public sealed class StreamProcessor :
         IVideoStream,
         IVMCommInt,
@@ -158,7 +158,7 @@ namespace VideoMonitor_Proj3
 
 
         //callback if no response is recieved from network request from networkReady
-        public void setAsRoot(VMParameter[] parameters)
+        public void setAsRoot(VMParameters parameters)
         {
             //initialize my address
             myAddress = new VMAddress(new int[] { 0 });
@@ -166,7 +166,7 @@ namespace VideoMonitor_Proj3
             VMService svc = rasterMyService(); //collects components of local service model
 
             //initialize network object
-            network = new VMNetwork(new VMService[] { svc });
+            network = new VMNetwork(new VMServices(new VMService[] { svc }));
 
             isInitialized = true;  //is now initialized and ready
         }
@@ -320,7 +320,7 @@ namespace VideoMonitor_Proj3
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
                                     messages++, DateTime.Now, //message id and time sent
-                                    new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }, null, //payload relating to control message    (parameters, command,)
+                                    new VMParameters(new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }), null, //payload relating to control message    (parameters, command,)
                                     null, null, //payload relating to image frame        (image, frameid,)
                                     null, network, //payload relating to service or network (service, network,)
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
@@ -336,10 +336,10 @@ namespace VideoMonitor_Proj3
                             {
                                 network = msg.network; //set my local netowrk
                                 //extract my address from the network, last id +1 !
-                                myAddress.id[0] = msg.network.services[msg.network.services.GetLength(0)].svc_addr.id[0]+1;
+                                myAddress.id[0] = msg.network.services.services[msg.network.services.services.GetLength(0)].svc_addr.id[0] + 1;
 
                                 //remove alarm in system:
-                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
+                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters.parameters[0].val)); //previous message id store in parameter 0.val
                                 foreach (VMAlarm alarm in alarms)
                                 {
                                     alarmList.Remove(alarm.id);
@@ -348,9 +348,9 @@ namespace VideoMonitor_Proj3
                                 //now add self to the network object
                                 VMService mySvc = rasterMyService(); //get my local service
 
-                                network.services[network.services.GetLength(0)] = mySvc; //add myself to the local network
+                                network.services.services[network.services.services.GetLength(0)] = mySvc; //add myself to the local network
 
-                                Array.Sort(network.services, scmp); //sort the local network by id
+                                Array.Sort(network.services.services, scmp); //sort the local network by id
 
                                 //finally, expose self to network
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, //message type
@@ -373,7 +373,7 @@ namespace VideoMonitor_Proj3
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
                                     messages++, DateTime.Now, //message id and time sent
-                                    new VMParameter[] {new VMParameter("rcv_id",msg.id.ToString())}, null, //payload relating to control message    (parameters, command,)
+                                    new VMParameters(new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }), null, //payload relating to control message    (parameters, command,)
                                     null, null, //payload relating to image frame        (image, frameid,)
                                     null, null, //payload relating to service or network (service, network,)
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
@@ -388,7 +388,7 @@ namespace VideoMonitor_Proj3
                             if (msg.srcAddr != null && isInitialized)
                             {
                                 //get any alarms associated w/ this message
-                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters[0].val)); //previous message id store in parameter 0.val
+                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters.parameters[0].val)); //previous message id store in parameter 0.val
                                 foreach (VMAlarm alarm in alarms)
                                 {
                                     alarmList.Remove(alarm.id);
@@ -406,13 +406,13 @@ namespace VideoMonitor_Proj3
                                 int pos = checkExistingService(msg.service.svc_addr);
                                 if (pos == -1) //doesn't exist
                                 {
-                                    network.services[network.services.GetLength(0)] = msg.service; //addto list
+                                    network.services.services[network.services.services.GetLength(0)] = msg.service; //addto list
                                 }
                                 else //exists already
                                 {
-                                    network.services[pos] = msg.service; //place in existing position
+                                    network.services.services[pos] = msg.service; //place in existing position
                                 }
-                                Array.Sort(network.services, scmp); //sort the local network by id
+                                Array.Sort(network.services.services, scmp); //sort the local network by id
                             }
                             break;
                     }
@@ -423,9 +423,9 @@ namespace VideoMonitor_Proj3
         //retrieve check to see if a service exists already, if so, return it's id in the list
         public int checkExistingService(VMAddress addr)
         {
-            for (int i=0;i<network.services.GetLength(0);i++)
+            for (int i = 0; i < network.services.services.GetLength(0); i++)
             {
-                if (network.services[i].svc_addr.id.ToString() == addr.id.ToString())
+                if (network.services.services[i].svc_addr.id.ToString() == addr.id.ToString())
                     return i;
             }
             return -1;
@@ -454,14 +454,14 @@ namespace VideoMonitor_Proj3
                 this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_SEND_FRAME, messages++, DateTime.Now, null, null, frame, id, null, null, myAddress, null, 1, 1));
         }
 
-        void IVMCommInt.SendGlobalCommand(string rfc_command, VMParameter[] parameters)
+        void IVMCommInt.SendGlobalCommand(string rfc_command, VMParameters parameters)
         {
             //send command w/ no destination
             if (this.isInitialized)
                 this.channelendpoint.Interface.Send(new VMMessage(messageType.MSG_TYPE_CONTROL_RFC, messages++, DateTime.Now, parameters, rfc_command, null, null, null, null, myAddress, null, 1, 1));
         }
 
-        void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, VMParameter[] parameters)
+        void IVMCommInt.SendCommand(VMAddress dest, string rfc_command, VMParameters parameters)
         {
             //send command with given destination
             if (this.isInitialized)
@@ -479,7 +479,7 @@ namespace VideoMonitor_Proj3
             }
         }
 
-        VMService[] IVMCommInt.GetNetworkServices()
+        VMServices IVMCommInt.GetNetworkServices()
         {
             return this.network.services;
         }

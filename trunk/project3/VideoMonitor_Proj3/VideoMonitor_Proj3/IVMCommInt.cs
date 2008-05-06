@@ -18,16 +18,16 @@ namespace VideoMonitor_Proj3
         void SendFrame(VMImage frame, FrameID id);
 
         [QS.Fx.Reflection.Operation("SendGlobalCommand")]
-        void SendGlobalCommand(string rfc_command, VMParameter[] parameters);
+        void SendGlobalCommand(string rfc_command, VMParameters parameters);
 
         [QS.Fx.Reflection.Operation("SendCommand")]
-        void SendCommand(VMAddress dest, string rfc_command, VMParameter[] parameters);
+        void SendCommand(VMAddress dest, string rfc_command, VMParameters parameters);
 
         [QS.Fx.Reflection.Operation("SendLocalServices")]
         void SendLocalServices(VMService service);
 
         [QS.Fx.Reflection.Operation("GetNetworkServices")]
-        VMService[] GetNetworkServices();
+        VMServices GetNetworkServices();
 
         [QS.Fx.Reflection.Operation("GetInstanceID")]
         string GetInstanceID();

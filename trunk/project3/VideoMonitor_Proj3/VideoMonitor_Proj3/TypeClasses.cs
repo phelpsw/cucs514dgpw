@@ -30,7 +30,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("1`1", "VMMessage")]
     public sealed class VMMessage
     {
-        public VMMessage(int type, int id, DateTime sent, VMParameter[] parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, VMAddress srcAddr, VMAddress dstAddr, int count, int max_count)
+        public VMMessage(int type, int id, DateTime sent, VMParameters parameters, string rfc_command, VMImage image, FrameID fid, VMService service, VMNetwork network, VMAddress srcAddr, VMAddress dstAddr, int count, int max_count)
         {
             this.type = type;
             this.id = id;
@@ -66,7 +66,7 @@ namespace VideoMonitor_Proj3
         [XmlElement]
         public string rfc_command;  //network command
         [XmlAttribute]
-        public VMParameter[] parameters; //command parameters
+        public VMParameters parameters; //command parameters
         [XmlElement]
         public VMImage image; //image frame
         [XmlAttribute]
@@ -96,10 +96,25 @@ namespace VideoMonitor_Proj3
         {
 
         }
-        [XmlElement]
+        [XmlAttribute]
         public string name;
-        [XmlElement]
+        [XmlAttribute]
         public string val;
+    }
+
+    [QS.Fx.Reflection.ValueClass("11`1", "VMParameters")]
+    public sealed class VMParameters
+    {
+        public VMParameters(VMParameter[] parameters)
+        {
+            this.parameters = parameters;
+        }
+        public VMParameters()
+        {
+        }
+
+        [XmlElement]
+        public VMParameter[] parameters;
     }
 
     [QS.Fx.Reflection.ValueClass("4`1", "VMAddress")]
@@ -153,7 +168,7 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("7`1", "VMNetwork")]
     public sealed class VMNetwork
     {
-        public VMNetwork(VMService[] services)
+        public VMNetwork(VMServices services)
         {
             this.services = services;
         }
@@ -162,8 +177,8 @@ namespace VideoMonitor_Proj3
         {
                
         }
-        [XmlAttribute]
-        public VMService[] services; //local services
+        [XmlElement]
+        public VMServices services; //local services
 
     }
 
@@ -211,16 +226,32 @@ namespace VideoMonitor_Proj3
         [XmlElement]
         public int svc_avail; //availiable sub-services
 
-        [XmlAttribute]
-        public VMService[] subServices; //for server element, holds services of adjacent channel availiable
+        [XmlElement]
+        public VMServices subServices; //for server element, holds services of adjacent channel availiable
+    }
+
+    [QS.Fx.Reflection.ValueClass("12`1", "VMService")]
+    public sealed class VMServices
+    {
+        public VMServices(VMService[] services)
+        {
+            this.services = services;
+        }
+
+        public VMServices()
+        {
+        }
+
+        [XmlElement]
+        public VMService[] services;
     }
 
     //deligate callback type for alarms
-    public delegate void VMAlarmCallback(VMParameter[] parameters);
+    public delegate void VMAlarmCallback(VMParameters parameters);
 
     public sealed class VMAlarm
     {
-        public VMAlarm(int type, DateTime expires, int delay, VMMessage toSend, VMAlarmCallback callback, VMParameter[] callbackParams, bool repeats)
+        public VMAlarm(int type, DateTime expires, int delay, VMMessage toSend, VMAlarmCallback callback, VMParameters callbackParams, bool repeats)
         {
             this.expires = expires;
             this.type = type;
@@ -258,7 +289,7 @@ namespace VideoMonitor_Proj3
 
         public VMAlarmCallback callback; //callback to be called on expiration
 
-        public VMParameter[] callbackParams; //parameters to be passed to callback function
+        public VMParameters callbackParams; //parameters to be passed to callback function
 
         public bool repeats; //if alarm is to repeat
 

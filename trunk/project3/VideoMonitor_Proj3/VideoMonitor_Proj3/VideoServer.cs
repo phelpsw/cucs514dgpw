@@ -58,7 +58,7 @@ namespace VideoMonitor_Proj3
                 viewerStreamEndPoint.Interface.SendFrame(frame, id);
         }
 
-        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameter[] parameters, string origID)
+        void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameters parameters, string origID)
         {
             throw new NotImplementedException();
         }
@@ -68,7 +68,7 @@ namespace VideoMonitor_Proj3
             return new VMService(null, VMService.ServiceType.SVC_TYPE_VIDEO_SERVER, 0, null);
         }
 
-        VMService[] IVMAppFunc.GetRemoteServices(string origID)
+        VMServices IVMAppFunc.GetRemoteServices(string origID)
         {
             if (origID == sourceStreamEndPoint.Interface.GetInstanceID())
                 return sourceStreamEndPoint.Interface.GetNetworkServices();
