@@ -30,6 +30,10 @@ namespace VideoMonitor_Proj3
 
              //set local id
             this.instanceID = System.Guid.NewGuid().ToString();
+
+            alarmTimers = new PriorityQueue(acmp);
+
+            digester = new Thread(new ThreadStart(Digester));
         }
 
         private bool ready;
@@ -60,9 +64,12 @@ namespace VideoMonitor_Proj3
             public const int parent_live_check_count = 3;
 
             //time to wait for reponses to network status packet before repeat
-            public const int netowrk_model_wait_ttl = 200;
+            public const int netowrk_model_wait_ttl = 300;
             //number of times to attempt request of status packet before marking dead and asking again
-            public const int netowrk_model_wait_count = 3;
+            public const int netowrk_model_wait_count = 5;
+
+            //time between checkup message packets
+            public const int checkup_msg_delay = 8000;
 
         }
 
@@ -97,8 +104,6 @@ namespace VideoMonitor_Proj3
 
         //comparison operator for PriorityQueue
         private AlarmComparer acmp = new AlarmComparer();
-
-        private ServiceComparer scmp = new ServiceComparer();
 
         //message queue for incoming recieved messages
         private Queue<VMMessage> incoming = new Queue<VMMessage>();
@@ -154,21 +159,6 @@ namespace VideoMonitor_Proj3
             mySvc.subServices = this.interfaceEndpoint.Interface.GetRemoteServices(this.instanceID);
 
             return mySvc;
-        }
-
-
-        //callback if no response is recieved from network request from networkReady
-        public void setAsRoot(VMParameters parameters)
-        {
-            //initialize my address
-            myAddress = new VMAddress(new int[] { 0 });
-
-            VMService svc = rasterMyService(); //collects components of local service model
-
-            //initialize network object
-            network = new VMNetwork(new VMServices(new VMService[] { svc }));
-
-            isInitialized = true;  //is now initialized and ready
         }
 
         //retrieve all of the alarms corrisponding to the given message id
@@ -269,13 +259,124 @@ namespace VideoMonitor_Proj3
 
         /** END TIMER FUNCTIONS **/
 
+        /** INITIALIZATION FUNCTIONS **/
+
+        void onInitialize()
+        {
+            //start timer to check on parent
+            beginParentCheckTimer();
+
+            //if I am the root node, the start the checkup timer
+            if (network.root().svc_addr.id[0] == myAddress.id[0])
+            {
+                beginCheckupTimer();
+            }
+        }
+
+        void beginParentCheckTimer()
+        {
+            //add an alarm to check the parent every set miliseconds
+            AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CALLBCK, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
+                DateTime.Now.AddMilliseconds(VMMsgConfig.parent_live_check_delay), VMMsgConfig.parent_live_check_delay, //set delay
+                null, parentLiveCheck, null, true)); //message and callback stuff w/ repeat
+        }
+
+        void beginCheckupTimer()
+        {
+            //add an alarm to check the parent every set miliseconds
+            AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CALLBCK, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
+                DateTime.Now.AddMilliseconds(VMMsgConfig.checkup_msg_delay), VMMsgConfig.checkup_msg_delay, //set delay
+                null, checkupMessageSend, null, true)); //message and callback stuff w/ repeat
+        }
+
+        /** END INITIALIZATION FUNCTIONS **/
+
+        /** TIMER CALLBACK FUNCTIONS **/
+
+        //callback if no response is recieved from network request from networkReady
+        public void setAsRoot(VMParameters parameters)
+        {
+            //initialize my address
+            myAddress = new VMAddress(new int[] { 0 });
+
+            VMService svc = rasterMyService(); //collects components of local service model
+
+            //initialize network object and add first element
+            network = new VMNetwork(new VMServices(new VMService[] { svc }));
+
+            isInitialized = true;  //is now initialized and ready
+        }
+
+        //send messages to check parent on network
+        public void parentLiveCheck(VMParameters parameters)
+        {
+            //create a message to send to parent
+            VMService parent = network.parent(myAddress); //get my parent (implicit::each time)
+            //create message
+            VMMessage msg = new VMMessage(messageType.MSG_TYPE_CONFIRM_LIVE, //message type
+                messages++, DateTime.Now, //message id and time sent
+                null, null, //payload relating to control message    (parameters, command,)
+                null, null, //payload relating to image frame        (image, frameid,)
+                null, null, //payload relating to service or network (service, network,)
+                myAddress, parent.svc_addr, //message addressing information         (source, destination,)
+                1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
+            //send
+            this.channelendpoint.Interface.Send(msg);
+
+            //add an alarm to check the parent every set miliseconds
+            AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
+                DateTime.Now.AddMilliseconds(VMMsgConfig.checkup_msg_delay), VMMsgConfig.checkup_msg_delay, //set delay
+                msg, failParentLiveCheck, new VMParameters(new VMParameter[] {new VMParameter("parentid",parent.svc_addr.id[0].ToString())} ), true)); //message and callback stuff w/ repeat
+        }
+
+        //call if timeout on repeat for parent live check
+        public void failParentLiveCheck(VMParameters parameters)
+        {
+            //we now want to remove the parent element from the network, 
+            //  send a remove message to the channel
+
+            int parentid = int.Parse(parameters.parameters[0].val);
+            //re-create the parent address
+            VMAddress addr = new VMAddress(new int[] { parentid });
+            //get the parent's service
+            VMService parentsvc = network.getServicesByID(addr);
+            //remove the parent service locally
+            network.removeService(parentsvc);
+
+            //create message (Send service to remove)
+            VMMessage msg = new VMMessage(messageType.MSG_TYPE_REMOVE_DEAD, //message type
+                messages++, DateTime.Now, //message id and time sent
+                null, null, //payload relating to control message    (parameters, command,)
+                null, null, //payload relating to image frame        (image, frameid,)
+                parentsvc, null, //payload relating to service or network (service, network,)
+                myAddress, null, //message addressing information         (source, destination,)
+                1, 1); //send counters (count, maximum count)
+            //send
+            this.channelendpoint.Interface.Send(msg);
+        }
+
+        public void checkupMessageSend(VMParameters parameters)
+        {
+            //create message (Send my service object)
+            VMMessage msg = new VMMessage(messageType.MSG_TYPE_CHECKUP_MESSAGE, //message type
+                messages++, DateTime.Now, //message id and time sent
+                null, null, //payload relating to control message    (parameters, command,)
+                null, null, //payload relating to image frame        (image, frameid,)
+                null, network, //payload relating to service or network (service, network,)
+                myAddress, null, //message addressing information         (source, destination,)
+                1, 1); //send counters (count, maximum count)
+            //send
+            this.channelendpoint.Interface.Send(msg);
+        }
+
+        /** END TIMER CALLBACK FUNCTIONS **/
+
         /** DIGESTOR / MESSAGE HANDLER FUNCIONALITY FOR MANAGING MESSAGE ROUTING **/
 
         //METHOD TO BEGIN MESSAGE DIGESTER THREAD (runs on form thread)
         private void StartDigester()
         {
             if(digester.IsAlive) {
-                digester = new Thread (new ThreadStart( Digester ));
                 digester.Start();
             }
         }
@@ -315,7 +416,8 @@ namespace VideoMonitor_Proj3
 
                         //when asked for the network, return local network model
                         case messageType.MSG_TYPE_REQUEST_NETWORK:
-                            if (msg != null && isInitialized)
+                            //only respond if current am the tail node
+                            if (msg != null && isInitialized && myAddress.id[0] == network.tail().svc_addr.id[0])
                             {
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
@@ -326,7 +428,16 @@ namespace VideoMonitor_Proj3
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
                                     1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
                                 //send
-                                this.channelendpoint.Interface.Send(msg);
+                                this.channelendpoint.Interface.Send(smsg);
+
+                                
+                                //add the new service to the network provsionally
+                                VMService nsvc = new VMService(new VMAddress(new int[] { (myAddress.id[0]+1) }),0,0,null);
+                                network.addService(nsvc);
+
+                                //-- this will keep this service from responding to any new requests
+
+
                             }
                             break;
 
@@ -336,7 +447,8 @@ namespace VideoMonitor_Proj3
                             {
                                 network = msg.network; //set my local netowrk
                                 //extract my address from the network, last id +1 !
-                                myAddress.id[0] = msg.network.services.services[msg.network.services.services.GetLength(0)].svc_addr.id[0] + 1;
+
+                                myAddress.id[0] = msg.network.tail().svc_addr.id[0] + 1;
 
                                 //remove alarm in system:
                                 List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters.parameters[0].val)); //previous message id store in parameter 0.val
@@ -345,12 +457,10 @@ namespace VideoMonitor_Proj3
                                     alarmList.Remove(alarm.id);
                                     alarmTimers.Remove(alarm);
                                 }
+
                                 //now add self to the network object
                                 VMService mySvc = rasterMyService(); //get my local service
-
-                                network.services.services[network.services.services.GetLength(0)] = mySvc; //add myself to the local network
-
-                                Array.Sort(network.services.services, scmp); //sort the local network by id
+                                network.addService(mySvc);
 
                                 //finally, expose self to network
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, //message type
@@ -361,8 +471,14 @@ namespace VideoMonitor_Proj3
                                     myAddress,null, //message addressing information         (source, destination,)
                                     1, 1); //send counters (count, maximum count)
                                 //send
-                                this.channelendpoint.Interface.Send(msg);
+                                this.channelendpoint.Interface.Send(smsg);
+
+                                //now with a local network model and have exposed self to the network,
+                                // initialized locally and running
+
                                 isInitialized = true;
+
+                                onInitialize(); //run local timers etc...
                             }
                             break;
 
@@ -379,7 +495,7 @@ namespace VideoMonitor_Proj3
                                     myAddress, msg.srcAddr, //message addressing information         (source, destination,)
                                     1, 1); //send counters (count, maximum count)
                                 //send
-                                this.channelendpoint.Interface.Send(msg);
+                                this.channelendpoint.Interface.Send(smsg);
                             }
                             break;
 
@@ -400,35 +516,129 @@ namespace VideoMonitor_Proj3
 
                         //when new network service recieved, add to network model
                         case messageType.MSG_TYPE_EXPOSE_SVC:
-                            if (msg.srcAddr != null && isInitialized)
+                            if (msg.service != null && isInitialized)
                             {
-                                //check if service exists: 
-                                int pos = checkExistingService(msg.service.svc_addr);
-                                if (pos == -1) //doesn't exist
+                                //add the new exposed service to the model
+                                bool exits = network.addService(msg.service);
+                            }
+                            break;
+
+                        //when a checkup message is recieved, send back disparaties in the networks
+                        case messageType.MSG_TYPE_CHECKUP_MESSAGE:
+                            if (msg.network != null && isInitialized)
+                            {
+                                int mylen = network.services.services.GetLength(0);
+                                int rootlen = msg.network.services.services.GetLength(0);
+
+                                List<VMService> tosend = new List<VMService>();
+
+                                int i,j;  // i = iterator for my network, j = iterator for root's network
+
+                                for (i = j = 0; i < (mylen > rootlen ? mylen : rootlen );)
                                 {
-                                    network.services.services[network.services.services.GetLength(0)] = msg.service; //addto list
+                                    if (i >= mylen)
+                                    {
+                                        //anything left in j (root) will not be in i (local)
+                                        // push any of these into local array
+                                        network.addService(msg.network.services.services[j]);
+                                        j++;i++;
+                                    }
+                                    else if (j >= rootlen)
+                                    {
+                                        //anything left in i (local) will not be in j (root)
+                                        tosend.Add(network.services.services[i]);
+                                        j++;i++;
+                                    }
+                                    else
+                                    {
+                                        int loc_id = network.services.services[i].svc_addr.id[0];
+                                        int root_id = msg.network.services.services[j].svc_addr.id[0];
+                                        if(loc_id != root_id) { //if they are different
+                                            if(loc_id > root_id) {
+                                                //if the local service is greater,
+                                                //then it is obviously in the local but not the root
+                                                tosend.Add(network.services.services[i]);
+                                                i++;
+                                                   
+                                            } else {
+                                                //then it is in the root but not local
+                                                network.addService(msg.network.services.services[j]);
+                                                j++;
+                                            }
+                                        }
+                                    }
+
                                 }
-                                else //exists already
+
+                                //create disparity network to send
+                                VMNetwork toSend = new VMNetwork(new VMServices(tosend.ToArray()));
+
+
+                                //create message
+                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_CHECKUP_RESPOND, //message type
+                                    messages++, DateTime.Now, //message id and time sent
+                                    new VMParameters(new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }), null, //payload relating to control message    (parameters, command,)
+                                    null, null, //payload relating to image frame        (image, frameid,)
+                                    null, toSend, //payload relating to service or network (service, network,)
+                                    myAddress, msg.srcAddr, //message addressing information         (source, destination,)
+                                    1, 1); //send counters (count, maximum count)
+                                //send
+                                this.channelendpoint.Interface.Send(smsg);
+                                //check differences w/ local network
+                                //   add any services in root model but not mine
+                                //   send a network model w/ anything in my model but not root
+                            }
+                            break;
+                        //only the root should be recieving this message
+                        case messageType.MSG_TYPE_CHECKUP_RESPOND:
+                            if (msg.network != null && isInitialized)
+                            {
+                                //add each service to the local object
+                                foreach(VMService svc in msg.network.services.services) {
+                                    network.addService(svc);
+                                }
+
+                                //send checkup message
+                                checkupMessageSend(null);
+                            }
+                            break;
+                        case messageType.MSG_TYPE_REMOVE_DEAD:
+                            if (msg.service != null && isInitialized)
+                            {
+                                //simply remove the service on recieve
+                                bool didremove = network.removeService(msg.service);
+                                
+                                //if it was I who was delete (oh crap! i been bad)
+                                if(msg.service.svc_addr.id[0] == myAddress.id[0]) {
+                                    //redo all of the add stuff :-(
+
+                                    //now add self to the network object
+                                    VMService mySvc = rasterMyService(); //get my local service
+                                    network.addService(mySvc);
+
+                                    //finally, expose self to network
+                                    VMMessage smsg = new VMMessage(messageType.MSG_TYPE_EXPOSE_SVC, //message type
+                                        messages++, DateTime.Now, //message id and time sent
+                                        null, null, //payload relating to control message    (parameters, command,)
+                                        null, null, //payload relating to image frame        (image, frameid,)
+                                        mySvc, null, //payload relating to service or network (service, network,)
+                                        myAddress,null, //message addressing information         (source, destination,)
+                                        1, 1); //send counters (count, maximum count)
+                                    //send
+                                    this.channelendpoint.Interface.Send(smsg);
+                                }
+
+                                //if i am now the root
+                                if (myAddress.id[0] == network.root().svc_addr.id[0])
                                 {
-                                    network.services.services[pos] = msg.service; //place in existing position
+                                    //begin duties at the root node
+                                    beginCheckupTimer();
                                 }
-                                Array.Sort(network.services.services, scmp); //sort the local network by id
                             }
                             break;
                     }
                 }
             }
-        }
-
-        //retrieve check to see if a service exists already, if so, return it's id in the list
-        public int checkExistingService(VMAddress addr)
-        {
-            for (int i = 0; i < network.services.services.GetLength(0); i++)
-            {
-                if (network.services.services[i].svc_addr.id.ToString() == addr.id.ToString())
-                    return i;
-            }
-            return -1;
         }
 
         /** END DIGESTOR FUNCTIONS **/
@@ -508,7 +718,7 @@ namespace VideoMonitor_Proj3
         {
             //upon receiving a message, simply throw it into the queue and let the digester pick it up
             //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
-            if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && _message.srcAddr.id[0]!=myAddress.id[0])
+            if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && (_message.dstAddr == null || _message.srcAddr.id[0]!=myAddress.id[0]))
             {
                 bool pendingcallback = incoming.Count > 0;
                 lock (incoming)
