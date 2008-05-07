@@ -65,21 +65,21 @@ namespace VideoMonitor_Proj3
         //Optional payloads
         [XmlElement]
         public string rfc_command;  //network command
-        [XmlAttribute]
+        [XmlElement]
         public VMParameters parameters; //command parameters
         [XmlElement]
         public VMImage image; //image frame
-        [XmlAttribute]
+        [XmlElement]
         public FrameID fid; //id for image frame
-        [XmlAttribute]
+        [XmlElement]
         public VMNetwork network; //network model
-        [XmlAttribute]
+        [XmlElement]
         public VMService service; //availiable service model
 
         //Message SRC/DEST info
-        [XmlAttribute]
+        [XmlElement]
         public VMAddress srcAddr;
-        [XmlAttribute]
+        [XmlElement]
         public VMAddress dstAddr;
 
     }
@@ -96,9 +96,9 @@ namespace VideoMonitor_Proj3
         {
 
         }
-        [XmlAttribute]
+        [XmlElement]
         public string name;
-        [XmlAttribute]
+        [XmlElement]
         public string val;
     }
 
@@ -129,7 +129,7 @@ namespace VideoMonitor_Proj3
         {
 
         }
-        [XmlAttribute]
+        [XmlElement]
         public VMid[] id; //source or destination address.. can be multi-part... next/prev should be in id[0] and should be updated/routed accordingly
 
         [XmlAttribute]
@@ -217,7 +217,7 @@ namespace VideoMonitor_Proj3
             //video viewer services
             public const int SVC_AVAIL_VIEWER_USR_C = 16; //viewer availiable
         }
-        [XmlAttribute]
+        [XmlElement]
         public VMAddress svc_addr; //service address for re-refrence
 
         [XmlElement]
