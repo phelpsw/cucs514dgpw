@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ID>00000000000000000000000000000100</ID>
-  <Name>VideoSource ID:100</Name>
-  <Comment>Information between the VideoSource and VideoServer is transmitted on this channel</Comment>
-  <MessageClass id="80BF90BD866049bc87223A029311D797" />
-  <CheckpointClass id="80BF90BD866049bc87223A029311D797" />
+  <Name>VideoSourceChannel100</Name>
+  <Comment>Information between the VideoSource and VideoServer</Comment>
+  <MessageClass id="148B8C6B886A49029CD81610CB75EEE6" />
+  <CheckpointClass id="148B8C6B886A49029CD81610CB75EEE6" />
 </Metadata>

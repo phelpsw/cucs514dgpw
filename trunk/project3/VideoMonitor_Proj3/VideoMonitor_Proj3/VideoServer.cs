@@ -21,24 +21,18 @@ namespace VideoMonitor_Proj3
     {
 
         public VideoServer(
-            [QS.Fx.Reflection.Parameter("sourceStreamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
-            QS.Fx.Object.IReference<IVideoStream> sourceStreamProcessor,
-            [QS.Fx.Reflection.Parameter("viewerStreamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
-            QS.Fx.Object.IReference<IVideoStream> viewerStreamProcessor)
+            [QS.Fx.Reflection.Parameter("streamProcessor", QS.Fx.Reflection.ParameterClass.Value)] 
+            QS.Fx.Object.IReference<IVideoStream> streamProcessor)
         {
             InitializeComponent();
             this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
-            this.sourceStreamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
-            this.viewerStreamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
-            this.sourceConnection = this.sourceStreamEndPoint.Connect(sourceStreamProcessor.Object.VideoProcessor);
-            this.viewerConnection = this.viewerStreamEndPoint.Connect(viewerStreamProcessor.Object.VideoProcessor);
+            this.streamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
+            this.channelConnection = this.streamEndPoint.Connect(streamProcessor.Object.VideoProcessor);
         }
 
         private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
-        private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> sourceStreamEndPoint;
-        private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> viewerStreamEndPoint;
-        private QS.Fx.Endpoint.IConnection sourceConnection;
-        private QS.Fx.Endpoint.IConnection viewerConnection;
+        private QS.Fx.Endpoint.Internal.IDualInterface<IVMCommInt, IVMAppFunc> streamEndPoint;
+        private QS.Fx.Endpoint.IConnection channelConnection;
 
         #region IUI Members
 
@@ -54,8 +48,7 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
-            if (origID == sourceStreamEndPoint.Interface.GetInstanceID())
-                viewerStreamEndPoint.Interface.SendFrame(frame, id);
+
         }
 
         void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameters parameters, string origID)
@@ -70,12 +63,7 @@ namespace VideoMonitor_Proj3
 
         VMServices IVMAppFunc.GetRemoteServices(string origID)
         {
-            if (origID == sourceStreamEndPoint.Interface.GetInstanceID())
-                return sourceStreamEndPoint.Interface.GetNetworkServices();
-            else if (origID == viewerStreamEndPoint.Interface.GetInstanceID())
-                return viewerStreamEndPoint.Interface.GetNetworkServices();
-            else
-                return null; // we might want to throw an exception in this situation
+            return streamEndPoint.Interface.GetNetworkServices();
         }
 
         void IVMAppFunc.Ready()
