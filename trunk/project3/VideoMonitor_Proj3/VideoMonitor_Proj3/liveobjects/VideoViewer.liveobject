@@ -1,4 +1,76 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-16"?>
 <Root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Object xsi:type="ReferenceObject" id="80BF90BD866049bc87223A029311D797`1:3`1" />
+  <Object xsi:type="ReferenceObject" id="80BF90BD866049BC87223A029311D797`1:3`1">
+    <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="VideoViewer" />
+    <Attribute id="7EC27D89CBD410DADE60463E4D46985" value="This component provides an interface to view selected indexed video sources" />
+    <Attribute id="9F64B7ABB95245F28596BFFD1F549558" value="3" />
+    <ObjectClass id="0`1:5211621A78F4CFBB993FA43186A5403`0" />
+    <Parameter id="streamProcessor">
+      <Value xsi:type="ReferenceObject" id="80BF90BD866049BC87223A029311D797`1:4`1">
+        <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="StreamProcessor" />
+        <Attribute id="7EC27D89CBD410DADE60463E4D46985" value="This is a component class based on the .NET type &quot;VideoMonitor_Proj3.StreamProcessor&quot;." />
+        <Attribute id="9F64B7ABB95245F28596BFFD1F549558" value="4" />
+        <ObjectClass id="80BF90BD866049BC87223A029311D797`1:1`1" />
+        <Parameter id="channel">
+          <Value xsi:type="ReferenceObject" id="0`1:7EB42417EB864FF485F685025C447808`0">
+            <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="Xml Channel" />
+            <Attribute id="7EC27D89CBD410DADE60463E4D46985" value="A checkpoint communication channel carrying serializable .NET objects encoded as XML strings." />
+            <Attribute id="9F64B7ABB95245F28596BFFD1F549558" value="7EB42417EB864FF485F685025C447808" />
+            <ObjectClass id="0`1:806C71E88E749AA879E52F960F4B881`0">
+              <Parameter id="MessageClass">
+                <Value xsi:type="ValueClass" id="80BF90BD866049BC87223A029311D797`1:1`1" />
+              </Parameter>
+              <Parameter id="CheckpointClass">
+                <Value xsi:type="ValueClass" id="80BF90BD866049BC87223A029311D797`1:5`1" />
+              </Parameter>
+            </ObjectClass>
+            <Parameter id="MessageClass">
+              <Value xsi:type="ValueClass" id="80BF90BD866049BC87223A029311D797`1:1`1" />
+            </Parameter>
+            <Parameter id="CheckpointClass">
+              <Value xsi:type="ValueClass" id="80BF90BD866049BC87223A029311D797`1:5`1" />
+            </Parameter>
+            <Parameter id="underlyingchannel">
+              <Value xsi:type="ReferenceObject" id="100">
+                <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="VideoSourceChannel100" />
+                <Attribute id="7EC27D89CBD410DADE60463E4D46985" value="Information between the VideoSource and VideoServer" />
+                <ObjectClass id="0`1:806C71E88E749AA879E52F960F4B881`0">
+                  <Parameter id="MessageClass">
+                    <Value xsi:type="ValueClass" id="0`1:148B8C6B886A49029CD81610CB75EEE6`0" />
+                  </Parameter>
+                  <Parameter id="CheckpointClass">
+                    <Value xsi:type="ValueClass" id="0`1:148B8C6B886A49029CD81610CB75EEE6`0" />
+                  </Parameter>
+                </ObjectClass>
+                <From xsi:type="ReferenceObject" id="011E83FA6A9F426993BB8EF26FF7D7B8">
+                  <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="Centralized Comm. Channel Client" />
+                  <ObjectClass id="0`1:D111EEF8754D4EB98ABD90B0260AEF93`0">
+                    <Parameter id="KeyClass">
+                      <Value xsi:type="ValueClass" id="0`1:2FEB1E028342422CBD38CB074B957973`0" />
+                    </Parameter>
+                    <Parameter id="ObjectClass">
+                      <Value xsi:type="ObjectClass" id="0`1:F5225FA26F7C4F6D93C9E5A1A45FCF45`0" />
+                    </Parameter>
+                  </ObjectClass>
+                  <From xsi:type="ReferenceObject" id="0`1:E8C9D312C27649F39812B8E99AA67CBC`0">
+                    <Attribute id="9F4C608A9A6D44FFAD8A2FDC662E185B" value="Registry" />
+                    <Attribute id="7EC27D89CBD410DADE60463E4D46985" value="A collection of services with known names, but with a local customized configuration that could be based on system registry or on configuration files." />
+                    <Attribute id="9F64B7ABB95245F28596BFFD1F549558" value="E8C9D312C27649F39812B8E99AA67CBC" />
+                    <ObjectClass id="0`1:D111EEF8754D4EB98ABD90B0260AEF93`0">
+                      <Parameter id="KeyClass">
+                        <Value xsi:type="ValueClass" id="0`1:2FEB1E028342422CBD38CB074B957973`0" />
+                      </Parameter>
+                      <Parameter id="ObjectClass">
+                        <Value xsi:type="ObjectClass" id="0`1:F5225FA26F7C4F6D93C9E5A1A45FCF45`0" />
+                      </Parameter>
+                    </ObjectClass>
+                  </From>
+                </From>
+              </Value>
+            </Parameter>
+          </Value>
+        </Parameter>
+      </Value>
+    </Parameter>
+  </Object>
 </Root>
