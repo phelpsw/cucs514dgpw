@@ -24,6 +24,12 @@ namespace VideoMonitor_Proj3
         public const int MSG_TYPE_REQUEST_NETWORK = 32;
         //Message sent to a new node with payload of network layout
         public const int MSG_TYPE_RESPOND_NETWORK = 64;
+        //send checkup message  //contains network of root node
+        public const int MSG_TYPE_CHECKUP_MESSAGE = 128;
+        //send checkup response //contains a network w/ services to add
+        public const int MSG_TYPE_CHECKUP_RESPOND = 256;
+        //send message to remove a dead node from the network
+        public const int MSG_TYPE_REMOVE_DEAD = 512;
 
     }
 
@@ -177,6 +183,87 @@ namespace VideoMonitor_Proj3
         {
                
         }
+
+        //string comparer object
+        private ServiceComparer scmp = new ServiceComparer();
+
+        //get a service's index by it's address
+        public VMService getServicesByID(VMAddress addr)
+        {
+            foreach (VMService svc in services.services)
+            {
+                if (svc.svc_addr.id[0] == addr.id[0])
+                {
+                    return svc;
+                }
+            }
+            return null; //not found
+        }
+
+        //remove a service by it's service object
+        public bool removeService(VMService service)
+        {
+            foreach (VMService svc in services.services)
+            {
+                if (svc.svc_addr.id[0] == service.svc_addr.id[0])
+                {
+                    services.serviceSet.Remove(svc);
+                    return true;
+                }
+            }
+            return false; //not found
+        }
+
+        //remove a service by it's address
+        public bool removeService(VMAddress addr)
+        {
+            foreach (VMService svc in services.services)
+            {
+                if (svc.svc_addr.id[0] == addr.id[0])
+                {
+                    services.serviceSet.Remove(svc);
+                    return true;
+                }
+            }
+            return false; //not found
+        }
+
+        //adds a service to the network, returns true if service existed previously, false else
+        public bool addService(VMService service) {
+            VMService exist = getServicesByID(service.svc_addr);
+            //if service currently exists, remove it
+            if (exist != null) 
+                removeService(service);
+
+            //add new service to end of list
+            this.services.serviceSet.Add(service);
+
+            //resort the array
+            services.serviceSet.Sort(scmp);
+
+            if (exist != null) return true;
+            return false;
+        }
+
+        //get root element of the array
+        public VMService root()
+        {
+            return services.serviceSet.First();
+        }
+
+        //get tail element of the array
+        public VMService tail()
+        {
+            return services.serviceSet.Last();
+        }
+
+        //get parent element of a given address
+        public VMService parent(VMAddress myaddr)
+        {
+            int myindex = services.serviceSet.IndexOf(getServicesByID(myaddr));
+            return services.serviceSet[(myindex==0?services.serviceSet.Count()-1:myindex-1)];
+        }
+
         [XmlElement]
         public VMServices services; //local services
 
@@ -242,8 +329,14 @@ namespace VideoMonitor_Proj3
         {
         }
 
+        public List<VMService> serviceSet;
+
         [XmlElement]
-        public VMService[] services;
+        public VMService[] services
+        {
+            get { return serviceSet.ToArray(); }
+            set { foreach (VMService svc in value) serviceSet.Add(svc); }
+        }
     }
 
     //deligate callback type for alarms
@@ -307,13 +400,13 @@ namespace VideoMonitor_Proj3
 
     }
 
-    public class ServiceComparer : System.Collections.IComparer
+    public class ServiceComparer : System.Collections.Generic.IComparer<VMService>
     {
 
         // Calls CaseInsensitiveComparer.Compare with the parameters reversed.
-        int System.Collections.IComparer.Compare(Object x, Object y)
+        int System.Collections.Generic.IComparer<VMService>.Compare(VMService x, VMService y)
         {
-            return ((VMService)y).svc_addr.id[0] - ((VMService)x).svc_addr.id[0]; // we want y to be bigger than x, thus x happens sooner
+            return x.svc_addr.id[0] - y.svc_addr.id[0];
         }
 
     }
