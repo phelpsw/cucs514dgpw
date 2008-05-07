@@ -27,8 +27,11 @@ namespace VideoMonitor_Proj3
             this.sourceConnection = this.streamEndPoint.Connect(streamProcessor.Object.VideoProcessor);
         
             // Define static image for testing
+            /* several image sources: http://webcams.goedgeluk.nl/list.html */
+            // Altadena ca, http://www.westphalfamily.com/webcam.jpg
+            // sjsu: http://www.met.sjsu.edu/cam_directory/latest.jpg
             static_image = new VMImage();
-            static_image.Picture = getNetworkImage("http://www.westphalfamily.com/webcam.jpg");
+            static_image.Picture = getNetworkImage("http://www.met.sjsu.edu/cam_directory/latest.jpg");
         }
 
         private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
@@ -96,9 +99,6 @@ namespace VideoMonitor_Proj3
             timer1.Enabled = false;
         }
 
-        /* several image sources: http://webcams.goedgeluk.nl/list.html */
-        // Altadena ca, http://www.westphalfamily.com/webcam.jpg
-        // sjsu: http://www.met.sjsu.edu/cam_directory/latest.jpg
         private Bitmap getNetworkImage(string sourceURL)
         {
             //string sourceURL = "http://webcam.mmhk.cz/axis-cgi/jpg/image.cgi";

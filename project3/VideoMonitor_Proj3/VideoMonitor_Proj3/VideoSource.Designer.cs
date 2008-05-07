@@ -33,7 +33,11 @@
             this.startStream = new System.Windows.Forms.Button();
             this.endStream = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // timer1
@@ -42,9 +46,9 @@
             // 
             // startStream
             // 
-            this.startStream.Location = new System.Drawing.Point(3, 118);
+            this.startStream.Location = new System.Drawing.Point(3, 3);
             this.startStream.Name = "startStream";
-            this.startStream.Size = new System.Drawing.Size(75, 23);
+            this.startStream.Size = new System.Drawing.Size(75, 29);
             this.startStream.TabIndex = 0;
             this.startStream.Text = "Start Stream";
             this.startStream.UseVisualStyleBackColor = true;
@@ -52,9 +56,9 @@
             // 
             // endStream
             // 
-            this.endStream.Location = new System.Drawing.Point(84, 118);
+            this.endStream.Location = new System.Drawing.Point(3, 38);
             this.endStream.Name = "endStream";
-            this.endStream.Size = new System.Drawing.Size(75, 23);
+            this.endStream.Size = new System.Drawing.Size(75, 29);
             this.endStream.TabIndex = 1;
             this.endStream.Text = "End Stream";
             this.endStream.UseVisualStyleBackColor = true;
@@ -62,25 +66,42 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox1.Location = new System.Drawing.Point(4, 4);
+            this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(147, 108);
+            this.pictureBox1.Size = new System.Drawing.Size(473, 361);
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.startStream);
+            this.splitContainer1.Panel1.Controls.Add(this.endStream);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.pictureBox1);
+            this.splitContainer1.Size = new System.Drawing.Size(715, 361);
+            this.splitContainer1.SplitterDistance = 238;
+            this.splitContainer1.TabIndex = 3;
             // 
             // VideoSource
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.endStream);
-            this.Controls.Add(this.startStream);
+            this.Controls.Add(this.splitContainer1);
             this.Name = "VideoSource";
-            this.Size = new System.Drawing.Size(154, 149);
+            this.Size = new System.Drawing.Size(715, 361);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -91,5 +112,6 @@
         private System.Windows.Forms.Button startStream;
         private System.Windows.Forms.Button endStream;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.SplitContainer splitContainer1;
     }
 }
