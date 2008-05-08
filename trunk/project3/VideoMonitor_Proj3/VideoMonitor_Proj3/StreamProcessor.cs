@@ -297,6 +297,9 @@ namespace VideoMonitor_Proj3
             {
                 beginCheckupTimer();
             }
+
+            //alert ui that network has changed
+            this.interfaceEndpoint.Interface.OnNetworkUpdate(this.instanceID);
         }
 
         void beginParentCheckTimer()
@@ -547,7 +550,7 @@ namespace VideoMonitor_Proj3
                             {
                                 //add the new exposed service to the model
                                 bool exists = network.addService(msg.service);
-                                if (!exists) this.interfaceEndpoint.Interface.OnNetworkUpdate(this.instanceID);
+                                this.interfaceEndpoint.Interface.OnNetworkUpdate(this.instanceID);
                             }
                             break;
 
@@ -673,8 +676,6 @@ namespace VideoMonitor_Proj3
 
         //** COMMINTERFACE EXPORTED FUNCTIONS (IVMCommInt) **//
 
-        #region IVMCommInt Members
-
         //return if the network is ready to send
         bool IVMCommInt.Ready()
         {
@@ -734,10 +735,8 @@ namespace VideoMonitor_Proj3
             return this.myAddress;
         }
 
-        #endregion
 
-
-        #region ICheckpointedCommunicationChannelClient<VMMessage, NullC> Members
+        #region ICheckpointedCommunicationChannelClient<IMessage, IChatState> Members
 
         NullC QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Checkpoint()
         {
@@ -787,9 +786,5 @@ namespace VideoMonitor_Proj3
         }
 
         #endregion
-
-        
-
-        
     }
 }

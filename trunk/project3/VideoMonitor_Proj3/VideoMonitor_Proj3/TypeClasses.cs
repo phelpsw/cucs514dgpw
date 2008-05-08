@@ -163,7 +163,7 @@ namespace VideoMonitor_Proj3
 
         public FrameID()
         {
-         
+
         }
         [XmlAttribute]
         public DateTime time;
@@ -171,8 +171,9 @@ namespace VideoMonitor_Proj3
         public int id;
         [XmlElement]
         public VMAddress src;
-         
+
     }
+
 
     [QS.Fx.Reflection.ValueClass("7`1", "VMNetwork")]
     public sealed class VMNetwork
@@ -193,6 +194,7 @@ namespace VideoMonitor_Proj3
         //get a service's index by it's address
         public VMService getServicesByID(VMAddress addr)
         {
+            if (addr == null) return null;
             foreach (VMService svc in services.serviceSet.ToArray())
             {
                 if (svc.svc_addr.id[0] == addr.id[0])
@@ -328,7 +330,7 @@ namespace VideoMonitor_Proj3
         public string printAvailableServices(int val)
         {
             string output = "";
-            if((val | AvailService.SVC_AVAIL_VIDEO_SOURCE) > 0) // stupid c# doesn't treat this as a boolean
+            if ((val | AvailService.SVC_AVAIL_VIDEO_SOURCE) > 0) // stupid c# doesn't treat this as a boolean
                 output += "Video Source ";
             if ((val | AvailService.SVC_AVAIL_PZT_CAMERA_C) > 0)
                 output += "Pan Zoom Tilt Camera ";
@@ -340,6 +342,7 @@ namespace VideoMonitor_Proj3
                 output += "Video Viewer ";
             return output;
         }
+
 
         [XmlElement]
         public VMAddress svc_addr; //service address for re-refrence
