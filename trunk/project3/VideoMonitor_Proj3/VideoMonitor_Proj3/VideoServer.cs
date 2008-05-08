@@ -48,7 +48,7 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
-
+            textBox1.Text += "hello world";
         }
 
         void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameters parameters, string origID)

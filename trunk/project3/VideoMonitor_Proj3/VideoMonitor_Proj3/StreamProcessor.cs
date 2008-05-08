@@ -135,7 +135,7 @@ namespace VideoMonitor_Proj3
                     null, null, //payload relating to control message    (parameters, command,)
                     null, null, //payload relating to image frame        (image, frameid,)
                     null, null, //payload relating to service or network (service, network,)
-                    null, null, //message addressing information         (source, destination,)
+                    new VMAddress(new int[] {-1}), null, //message addressing information         (source, destination,)
                     1, VMMsgConfig.netowrk_model_wait_ttl); //send counters (count, maximum count)
                 //send message
                 this.channelendpoint.Interface.Send(msg);
@@ -263,6 +263,7 @@ namespace VideoMonitor_Proj3
 
         void onInitialize()
         {
+            MessageBox.Show("Initalized, my address:" + myAddress.id[0].ToString()); 
             //start timer to check on parent
             beginParentCheckTimer();
 
@@ -411,7 +412,7 @@ namespace VideoMonitor_Proj3
                                 this.interfaceEndpoint.Interface.RecieveFrame(msg.image, msg.fid,this.instanceID);
                             }
                             break;
-
+                            
                         /*MESSAGES DEALING WITH NETWORK RELATED FUNCTIONS*/
 
                         //when asked for the network, return local network model
@@ -716,9 +717,11 @@ namespace VideoMonitor_Proj3
 
         void QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Receive(VMMessage _message)
         {
+            if(_message.srcAddr != null)
+                MessageBox.Show("MsgID:"+_message.srcAddr.id[0].ToString()); 
             //upon receiving a message, simply throw it into the queue and let the digester pick it up
             //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
-            if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && (_message.dstAddr == null || _message.srcAddr.id[0]!=myAddress.id[0]))
+            if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && (_message.dstAddr == null || _message.srcAddr.id[0] != myAddress.id[0]))
             {
                 bool pendingcallback = incoming.Count > 0;
                 lock (incoming)

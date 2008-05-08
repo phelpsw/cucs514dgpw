@@ -43,6 +43,7 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
+            textBox1.Text += "hello world";
             // buffer image
             // use timer to grab from buffer
             // handle ordering during buffer insert possibly
