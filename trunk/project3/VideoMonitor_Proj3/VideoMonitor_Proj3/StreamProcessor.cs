@@ -547,7 +547,7 @@ namespace VideoMonitor_Proj3
                             {
                                 //add the new exposed service to the model
                                 bool exists = network.addService(msg.service);
-                                if (!exists) OnNetworkUpdate(this.instanceID);
+                                if (!exists) this.interfaceEndpoint.Interface.OnNetworkUpdate(this.instanceID);
                             }
                             break;
 
