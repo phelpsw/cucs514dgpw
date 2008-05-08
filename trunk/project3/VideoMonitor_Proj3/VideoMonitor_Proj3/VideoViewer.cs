@@ -41,13 +41,27 @@ namespace VideoMonitor_Proj3
 
         #region IVMAppFunc Members
 
+        int frames_rcv = 0;
+
+        double total_tme = 0.0;
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
+
             if (treeView1.SelectedNode != null)
             {
                 if((int)treeView1.SelectedNode.Tag == id.src.id[0])
                     pictureBox1.Image = frame.Picture;
+
+                total_tme += DateTime.Now.Subtract(id.time).Milliseconds;
+
+                frames_rcv++;
+
+                textBox1.Text = "";
+
+                textBox1.Text += "Total Frames:\r\n\t"+frames_rcv.ToString()+"\r\n";
+
+                textBox1.Text += "Average Time To Send\r\n\t"+Math.Round(total_tme,4).ToString()+"";
             }
             // buffer image
             // use timer to grab from buffer
@@ -100,6 +114,10 @@ namespace VideoMonitor_Proj3
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
+            //clear statistics
+            frames_rcv = 0;
+            total_tme = 0.0;
+
             if (pictureBox1.Image != null)
             {
                 pictureBox1.Image = null;
