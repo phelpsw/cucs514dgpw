@@ -457,7 +457,7 @@ namespace VideoMonitor_Proj3
                         //when asked for the network, return local network model
                         case messageType.MSG_TYPE_REQUEST_NETWORK:
                             //only respond if current am the tail node
-                            if (msg != null && isInitialized && myAddress.id[0] == network.tail().svc_addr.id[0])
+                            if (msg != null && isInitialized /*&& myAddress.id[0] == network.tail().svc_addr.id[0]*/)
                             {
                                 //create message
                                 VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_NETWORK, //message type
