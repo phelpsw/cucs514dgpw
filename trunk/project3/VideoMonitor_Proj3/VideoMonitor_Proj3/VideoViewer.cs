@@ -61,7 +61,7 @@ namespace VideoMonitor_Proj3
 
                 textBox1.Text += "Total Frames:\r\n\t"+frames_rcv.ToString()+"\r\n";
 
-                textBox1.Text += "Average Time To Send\r\n\t"+Math.Round(total_tme,4).ToString()+"";
+                textBox1.Text += "Average Time To Send\r\n\t"+Math.Round((total_tme/frames_rcv),4).ToString()+"";
             }
             // buffer image
             // use timer to grab from buffer
