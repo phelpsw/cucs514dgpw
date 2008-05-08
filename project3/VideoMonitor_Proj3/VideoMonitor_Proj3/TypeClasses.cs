@@ -377,7 +377,7 @@ namespace VideoMonitor_Proj3
         public VMService[] services
         {
             get { return serviceSet.ToArray(); }
-            set { foreach (VMService svc in value) serviceSet.Add(svc); }
+            set { serviceSet.Clear(); foreach (VMService svc in value) serviceSet.Add(svc); }
         }
     }
 

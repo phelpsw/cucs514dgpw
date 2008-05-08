@@ -288,7 +288,7 @@ namespace VideoMonitor_Proj3
 
         void onInitialize()
         {
-            MessageBox.Show("Initalized, my address:" + myAddress.id[0].ToString()); 
+            //MessageBox.Show("Initalized, my address:" + myAddress.id[0].ToString()); 
             //start timer to check on parent
             beginParentCheckTimer();
 
