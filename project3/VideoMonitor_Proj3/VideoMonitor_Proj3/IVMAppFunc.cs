@@ -22,7 +22,10 @@ namespace VideoMonitor_Proj3
         VMService GetLocalService(string origID);
 
         [QS.Fx.Reflection.Operation("GetRemoteServices")]
-        VMServices GetRemoteServices(string origID); 
+        VMServices GetRemoteServices(string origID);
+
+        [QS.Fx.Reflection.Operation("OnNetworkUpdate")]
+        void OnNetworkUpdate(string origID); 
 
     }
 }

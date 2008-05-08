@@ -31,6 +31,9 @@ namespace VideoMonitor_Proj3
              //set local id
             this.instanceID = System.Guid.NewGuid().ToString();
 
+             //initialize address
+            myAddress = new VMAddress(new int[] { -1 });
+
             alarmTimers = new PriorityQueue(acmp);
 
             digester = new Thread(new ThreadStart(Digester));
@@ -135,15 +138,15 @@ namespace VideoMonitor_Proj3
                     null, null, //payload relating to control message    (parameters, command,)
                     null, null, //payload relating to image frame        (image, frameid,)
                     null, null, //payload relating to service or network (service, network,)
-                    new VMAddress(new int[] {-1}), null, //message addressing information         (source, destination,)
-                    1, VMMsgConfig.netowrk_model_wait_ttl); //send counters (count, maximum count)
+                    myAddress, null, //message addressing information         (source, destination,)
+                    1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
                 //send message
                 this.channelendpoint.Interface.Send(msg);
 
                 //ad an alarm to resend the request the given number of times after waiting the specified time.
                 AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CONTMSG, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
                     DateTime.Now.AddMilliseconds(VMMsgConfig.netowrk_model_wait_ttl), VMMsgConfig.netowrk_model_wait_ttl, //set delay
-                    msg, setAsRoot,null,false)); //message and callback stuff w/ repeat
+                    msg, setAsRoot, null,false)); //message and callback stuff w/ repeat
             }
         }
 
@@ -168,7 +171,7 @@ namespace VideoMonitor_Proj3
 
             foreach (VMAlarm l in alarmList.Values)
             {
-                if (l.message.id == msg_id)
+                if ((l.type==VMAlarm.AlarmType.ALM_TYPE_CONTMSG || l.type==VMAlarm.AlarmType.ALM_TYPE_MESSAGE) && l.message.id == msg_id)
                 {
                     list.Add(l);
                 }
@@ -205,7 +208,20 @@ namespace VideoMonitor_Proj3
             //add alarm to the indexed list
             alarmList.Add(alarm.id, alarm);
 
+            //MessageBox.Show("Alarm Added, Length:"+alarm.delay+" Repeats"+alarm.repeats.ToString());
+
             if (timer == null) StartTimer(); //timer not currently running, start it
+        }
+
+        //Remove any alarms related to the message id:
+        void RemoveAlarmsByMessageID(int messageid)
+        {
+            List<VMAlarm> alarms = getAlarmsByMessage(messageid); //previous message id store in parameter 0.val
+            foreach (VMAlarm alarm in alarms)
+            {
+                alarmList.Remove(alarm.id);
+                alarmTimers.Remove(alarm);
+            }
         }
 
         //Timer Thread to Monitor lockTimers queue and 
@@ -227,6 +243,7 @@ namespace VideoMonitor_Proj3
 
                         case VMAlarm.AlarmType.ALM_TYPE_CALLBCK: //simply call method on expirie
                             alarm.callback(alarm.callbackParams);
+                            //MessageBox.Show("ALARM");
                             break;
 
                         case VMAlarm.AlarmType.ALM_TYPE_CONTMSG:
@@ -234,25 +251,33 @@ namespace VideoMonitor_Proj3
                             if (alarm.message.count > alarm.message.max_count) //if max number of attempts reached, run callback function
                             {
                                 alarm.callback(alarm.callbackParams);
+                                alarmList.Remove(alarm.id);
                             }
                             else //resend
                             {
                                 VMMessage alm_msg = alarm.message;
                                 this.channelendpoint.Interface.Send(alm_msg);
+
+                                alarm.expires = DateTime.Now.AddMilliseconds(alarm.delay);
+                                if(!alarm.repeats) alarmTimers.Enqueue(alarm);
                             }
                             break;
                     }
                     //remove alarm from the queue and from the listist
-                    alarmList.Remove(alarm.id);
+                    
 
                     //reinsert alarm if it repeats
                     if (alarm.repeats)
                     {
                         alarm.expires = DateTime.Now.AddMilliseconds(alarm.delay);
-                        AddAlarm(alarm);
+                        alarmTimers.Enqueue(alarm);
+                    }
+                    else
+                    {
+                        alarmList.Remove(alarm.id);
                     }
                 }
-                if (alarmList.Count == 0) StopTimer(); //end the timer if none remain
+                //if (alarmList.Count == 0) StopTimer(); //end the timer if none remain
             }
             //end, will be relaunched in delta* time
         }
@@ -276,6 +301,7 @@ namespace VideoMonitor_Proj3
 
         void beginParentCheckTimer()
         {
+            return;
             //add an alarm to check the parent every set miliseconds
             AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CALLBCK, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
                 DateTime.Now.AddMilliseconds(VMMsgConfig.parent_live_check_delay), VMMsgConfig.parent_live_check_delay, //set delay
@@ -284,6 +310,7 @@ namespace VideoMonitor_Proj3
 
         void beginCheckupTimer()
         {
+            return;
             //add an alarm to check the parent every set miliseconds
             AddAlarm(new VMAlarm(VMAlarm.AlarmType.ALM_TYPE_CALLBCK, //send alarm type of contingent message (will monitor max send and call deligate on max_count)
                 DateTime.Now.AddMilliseconds(VMMsgConfig.checkup_msg_delay), VMMsgConfig.checkup_msg_delay, //set delay
@@ -297,20 +324,26 @@ namespace VideoMonitor_Proj3
         //callback if no response is recieved from network request from networkReady
         public void setAsRoot(VMParameters parameters)
         {
-            //initialize my address
-            myAddress = new VMAddress(new int[] { 0 });
+            if (!isInitialized)
+            {
+                //initialize my address
+                myAddress = new VMAddress(new int[] { 0 });
 
-            VMService svc = rasterMyService(); //collects components of local service model
+                VMService svc = rasterMyService(); //collects components of local service model
 
-            //initialize network object and add first element
-            network = new VMNetwork(new VMServices(new VMService[] { svc }));
+                //initialize network object and add first element
+                network = new VMNetwork(new VMServices(new VMService[] { svc }));
 
-            isInitialized = true;  //is now initialized and ready
+                onInitialize();
+
+                isInitialized = true;  //is now initialized and ready
+            }
         }
 
         //send messages to check parent on network
         public void parentLiveCheck(VMParameters parameters)
         {
+            if (network.services.services.GetLength(0) == 1) return;
             //create a message to send to parent
             VMService parent = network.parent(myAddress); //get my parent (implicit::each time)
             //create message
@@ -341,6 +374,8 @@ namespace VideoMonitor_Proj3
             VMAddress addr = new VMAddress(new int[] { parentid });
             //get the parent's service
             VMService parentsvc = network.getServicesByID(addr);
+
+            if (parentsvc == null) return; //if parent no longer exists, ignore ((FIXXII))
             //remove the parent service locally
             network.removeService(parentsvc);
 
@@ -377,9 +412,10 @@ namespace VideoMonitor_Proj3
         //METHOD TO BEGIN MESSAGE DIGESTER THREAD (runs on form thread)
         private void StartDigester()
         {
-            if(digester.IsAlive) {
-                digester.Start();
-            }
+            //if(!digester.IsAlive) {
+            //    digester.Start();
+            //}
+            Digester();
         }
 
         //Clears out the message queue of new meessages and routes them according to type and parameters
@@ -421,7 +457,7 @@ namespace VideoMonitor_Proj3
                             if (msg != null && isInitialized && myAddress.id[0] == network.tail().svc_addr.id[0])
                             {
                                 //create message
-                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_LIVE, //message type
+                                VMMessage smsg = new VMMessage(messageType.MSG_TYPE_RESPOND_NETWORK, //message type
                                     messages++, DateTime.Now, //message id and time sent
                                     new VMParameters(new VMParameter[] { new VMParameter("rcv_id", msg.id.ToString()) }), null, //payload relating to control message    (parameters, command,)
                                     null, null, //payload relating to image frame        (image, frameid,)
@@ -430,7 +466,7 @@ namespace VideoMonitor_Proj3
                                     1, VMMsgConfig.netowrk_model_wait_count); //send counters (count, maximum count)
                                 //send
                                 this.channelendpoint.Interface.Send(smsg);
-
+                                //MessageBox.Show("Sending Network W/ " + network.services.serviceSet.Count.ToString() + " services");
                                 
                                 //add the new service to the network provsionally
                                 VMService nsvc = new VMService(new VMAddress(new int[] { (myAddress.id[0]+1) }),0,0,null);
@@ -446,18 +482,14 @@ namespace VideoMonitor_Proj3
                         case messageType.MSG_TYPE_RESPOND_NETWORK:
                             if (msg.network != null && !isInitialized) //only recieve once, before initialized
                             {
+                                //MessageBox.Show("Recv. Network Model, Size Prev: "+msg.network.services.serviceSet.Count.ToString());
                                 network = msg.network; //set my local netowrk
                                 //extract my address from the network, last id +1 !
 
                                 myAddress.id[0] = msg.network.tail().svc_addr.id[0] + 1;
 
                                 //remove alarm in system:
-                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters.parameters[0].val)); //previous message id store in parameter 0.val
-                                foreach (VMAlarm alarm in alarms)
-                                {
-                                    alarmList.Remove(alarm.id);
-                                    alarmTimers.Remove(alarm);
-                                }
+                                RemoveAlarmsByMessageID(int.Parse(msg.parameters.parameters[0].val));
 
                                 //now add self to the network object
                                 VMService mySvc = rasterMyService(); //get my local service
@@ -503,15 +535,9 @@ namespace VideoMonitor_Proj3
                         //when confirmed live, remove any alarms associated with this request
                         case messageType.MSG_TYPE_RESPOND_LIVE:
                             if (msg.srcAddr != null && isInitialized)
-                            {
+                            { 
                                 //get any alarms associated w/ this message
-                                List<VMAlarm> alarms = getAlarmsByMessage(int.Parse(msg.parameters.parameters[0].val)); //previous message id store in parameter 0.val
-                                foreach (VMAlarm alarm in alarms)
-                                {
-                                    alarmList.Remove(alarm.id);
-                                    alarmTimers.Remove(alarm);
-                                }
-
+                                RemoveAlarmsByMessageID(int.Parse(msg.parameters.parameters[0].val));
                             }
                             break;
 
@@ -520,7 +546,8 @@ namespace VideoMonitor_Proj3
                             if (msg.service != null && isInitialized)
                             {
                                 //add the new exposed service to the model
-                                bool exits = network.addService(msg.service);
+                                bool exists = network.addService(msg.service);
+                                if (!exists) OnNetworkUpdate(this.instanceID);
                             }
                             break;
 
@@ -717,20 +744,37 @@ namespace VideoMonitor_Proj3
 
         void QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Receive(VMMessage _message)
         {
-            if(_message.srcAddr != null)
-                MessageBox.Show("MsgID:"+_message.srcAddr.id[0].ToString()); 
+            if (_message == null)
+                throw new Exception("Message is null");
+
+            if (_message.srcAddr == null)
+                throw new Exception("Message SourceAddress is null");
+
+            if (myAddress == null)
+               throw new Exception("myAddress is null");
+
+            //if(_message.srcAddr != null)
+                //MessageBox.Show("MsgID:"+_message.srcAddr.id[0].ToString() + " Send Count: "+ _message.count.ToString()); 
             //upon receiving a message, simply throw it into the queue and let the digester pick it up
             //if message has generic address or is addressed to me, process, otherwise ignore, also block loopback
+            if (isInitialized || _message.type == messageType.MSG_TYPE_RESPOND_NETWORK)
+            {
+                if ((_message.dstAddr == null && (_message.srcAddr.id[0] != myAddress.id[0])) || (_message.dstAddr != null && _message.dstAddr.id[0] == myAddress.id[0]))
+                {
+                    bool pendingcallback = incoming.Count > 0;
+                    lock (incoming)
+                    {
+                        incoming.Enqueue(_message);
+                    }
+                    if (!pendingcallback)
+                        this.StartDigester();
+                }
+            }
+            /*
             if ((_message.dstAddr == null || _message.dstAddr.id[0] == myAddress.id[0]) && (_message.dstAddr == null || _message.srcAddr.id[0] != myAddress.id[0]))
             {
-                bool pendingcallback = incoming.Count > 0;
-                lock (incoming)
-                {
-                    incoming.Enqueue(_message);
-                }
-                if (!pendingcallback)
-                    this.StartDigester();
-            }
+                
+            }*/
         }
 
         #endregion
