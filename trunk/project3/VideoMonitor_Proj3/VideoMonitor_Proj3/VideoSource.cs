@@ -8,6 +8,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.IO;
+using AviFile;
+using System.Reflection;
 
 namespace VideoMonitor_Proj3
 {
@@ -30,8 +32,14 @@ namespace VideoMonitor_Proj3
             /* several image sources: http://webcams.goedgeluk.nl/list.html */
             // Altadena ca, http://www.westphalfamily.com/webcam.jpg
             // sjsu: http://www.met.sjsu.edu/cam_directory/latest.jpg
+            // eiffel tower: http://www.parislive.net/eiffelwebcam1.jpg
+
+            // AVI Video source: http://www.charleslindbergh.com/movies/index.asp
+
             static_image = new VMImage();
-            static_image.Picture = getNetworkImage("http://www.met.sjsu.edu/cam_directory/latest.jpg");
+            static_image.Picture = getNetworkImage("http://www.parislive.net/eiffelwebcam1.jpg");
+            frameindex = 0;
+            
         }
 
         private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
@@ -39,7 +47,8 @@ namespace VideoMonitor_Proj3
         private QS.Fx.Endpoint.IConnection sourceConnection;
 
         private VMImage static_image;
-        
+        private AviManager aviManager;
+        private int frameindex;
 
         #region IUI Members
 
@@ -84,40 +93,108 @@ namespace VideoMonitor_Proj3
 
         #endregion
 
+        // Howto render WMV Frame by Frame: http://www.codeproject.com/KB/audio-video/avifilewrapper.aspx
         private void timer1_Tick(object sender, EventArgs e)
         {
-            // display what is transmitted by this channel
-            pictureBox1.Image = static_image.Picture;
+            frameindex++;
+            VMImage frame = new VMImage();
 
-            // send frame on source channel
-            this.streamEndPoint.Interface.SendFrame(static_image, new FrameID(DateTime.Now, 0, streamEndPoint.Interface.GetMyAddress()));
+            if (optsrcWebcam.Checked)
+            {
+                static_image.Picture = getNetworkImage("http://www.parislive.net/eiffelwebcam1.jpg");
+                pictureBox1.Image = static_image.Picture;
+                frame.Picture = static_image.Picture;
+            }
+            else if (optsrcWMV.Checked)
+            {
+                
+                VideoStream aviStream = this.aviManager.GetVideoStream();
+                aviStream.GetFrameOpen();
+
+                if (frameindex >= aviStream.CountFrames)
+                    frameindex = 0;
+
+                frame.Picture = aviStream.GetBitmap(Convert.ToInt32(frameindex));
+                aviStream.GetFrameClose();
+                
+            }
+            else
+            {
+                return;
+            }
+
+            // display what is transmitted
+            pictureBox1.Image = frame.Picture;
+            // send frame on sourceframe.Picture channel
+            this.streamEndPoint.Interface.SendFrame(frame, new FrameID(DateTime.Now, frameindex, streamEndPoint.Interface.GetMyAddress()));
         }
 
         private void startStream_Click(object sender, EventArgs e)
         {
-            timer1.Enabled = true;
+            
+            // prompt for wmv file to display
+            if (optsrcWMV.Checked)
+            {
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    aviManager = new AviManager(openFileDialog1.FileName, true);
+                    timer1.Enabled = true;
+                    streamGroupBox1.Enabled = false;
+                }
+            }
+            else if (optsrcWebcam.Checked)
+            {
+                timer1.Enabled = true;
+                streamGroupBox1.Enabled = false;
+            }
         }
+
+        
 
         private void endStream_Click(object sender, EventArgs e)
         {
             timer1.Enabled = false;
+            streamGroupBox1.Enabled = true;
         }
 
         private Bitmap getNetworkImage(string sourceURL)
         {
-            //string sourceURL = "http://webcam.mmhk.cz/axis-cgi/jpg/image.cgi";
+
             byte[] buffer = new byte[100000];
             int read, total = 0;
+            Stream stream;
             // create HTTP request
+            try
+            {
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
+                // get response
 
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(sourceURL);
-            // get response
+                WebResponse resp = req.GetResponse();
+                // get response stream
 
-            WebResponse resp = req.GetResponse();
-            // get response stream
+                stream = resp.GetResponseStream();
+                // read data from stream
+            }
+            catch (Exception)
+            {
+                return new Bitmap(1, 1);
+                /* Error image
+                try
+                {
+                    HttpWebRequest req = (HttpWebRequest)WebRequest.Create("http://www.williamslabs.com/error.jpg");
+                    // get response
 
-            Stream stream = resp.GetResponseStream();
-            // read data from stream
+                    WebResponse resp = req.GetResponse();
+                    // get response stream
+
+                    stream = resp.GetResponseStream();
+                }
+                catch (Exception)
+                {
+                    return new Bitmap(1,1);
+                }
+                 */
+            }
 
             while ((read = stream.Read(buffer, total, 1000)) != 0)
             {
@@ -129,6 +206,5 @@ namespace VideoMonitor_Proj3
                           new MemoryStream(buffer, 0, total));
             return bmp;
         }
-
     }
 }

@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AviFile, Version=1.0.3050.21814, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\AviFile.dll</HintPath>
+    </Reference>
     <Reference Include="liveobjects_1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0f84102260c4a1aa, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\liveobjects\bin\liveobjects_1.dll</HintPath>
@@ -55,6 +59,11 @@
     <Compile Include="IVMAppFunc.cs" />
     <Compile Include="IVMCommInt.cs" />
     <Compile Include="PriorityQueue.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="VideoSource.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -82,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="channels\00000000000000000000000000000100\metadata.xml" />
+    <Content Include="error.jpg" />
     <Content Include="liveobjects\VideoViewer.liveobject" />
     <Content Include="liveobjects\VideoSource.liveobject" />
     <Content Include="liveobjects\VideoServer.liveobject" />
@@ -91,6 +101,11 @@
     <None Include="postbuild.bat" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="VideoServer.resx">
       <DependentUpon>VideoServer.cs</DependentUpon>
       <SubType>Designer</SubType>
