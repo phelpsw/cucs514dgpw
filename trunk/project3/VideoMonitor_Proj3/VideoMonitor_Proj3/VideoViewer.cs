@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace VideoMonitor_Proj3
 {
@@ -43,11 +44,15 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
-            textBox1.Text += "hello world";
+            if (treeView1.SelectedNode != null)
+            {
+                if((int)treeView1.SelectedNode.Tag == id.src.id[0])
+                    pictureBox1.Image = frame.Picture;
+            }
             // buffer image
             // use timer to grab from buffer
             // handle ordering during buffer insert possibly
-            pictureBox1.Image = frame.Picture;
+            
         }
 
         void IVMAppFunc.RecieveCommand(VMAddress src, string rfc_command, VMParameters parameters, string origID)
@@ -72,9 +77,34 @@ namespace VideoMonitor_Proj3
 
         void IVMAppFunc.OnNetworkUpdate(string origID)
         {
+            renderServiceTree(streamEndPoint.Interface.GetNetworkServices().services);
         }
 
         #endregion
 
+        private void renderServiceTree(VMService[] services)
+        {
+            this.BeginInvoke((ThreadStart)delegate()
+            {
+                treeView1.Nodes.Clear();
+                foreach (VMService svc in services)
+                {
+                    TreeNode mainNode = new TreeNode();
+                    mainNode.Text = "[" + svc.svc_addr.id[0].ToString() + "] " + svc.printServiceType(svc.svc_type);
+                    mainNode.ToolTipText = svc.printAvailableServices(svc.svc_avail);
+                    mainNode.Tag = svc.svc_addr.id[0];
+                    treeView1.Nodes.Add(mainNode);
+                }
+            });
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (pictureBox1.Image != null)
+            {
+                pictureBox1.Image = null;
+                pictureBox1.Invalidate();
+            }
+        }
     }
 }

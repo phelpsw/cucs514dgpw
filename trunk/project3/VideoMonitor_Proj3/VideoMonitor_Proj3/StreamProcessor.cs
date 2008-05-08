@@ -673,6 +673,8 @@ namespace VideoMonitor_Proj3
 
         //** COMMINTERFACE EXPORTED FUNCTIONS (IVMCommInt) **//
 
+        #region IVMCommInt Members
+
         //return if the network is ready to send
         bool IVMCommInt.Ready()
         {
@@ -727,8 +729,15 @@ namespace VideoMonitor_Proj3
             return this.instanceID;
         }
 
+        VMAddress IVMCommInt.GetMyAddress()
+        {
+            return this.myAddress;
+        }
 
-        #region ICheckpointedCommunicationChannelClient<IMessage, IChatState> Members
+        #endregion
+
+
+        #region ICheckpointedCommunicationChannelClient<VMMessage, NullC> Members
 
         NullC QS.Fx.Interface.Classes.ICheckpointedCommunicationChannelClient<VMMessage, NullC>.Checkpoint()
         {
@@ -778,5 +787,9 @@ namespace VideoMonitor_Proj3
         }
 
         #endregion
+
+        
+
+        
     }
 }

@@ -31,5 +31,8 @@ namespace VideoMonitor_Proj3
 
         [QS.Fx.Reflection.Operation("GetInstanceID")]
         string GetInstanceID();
+
+        [QS.Fx.Reflection.Operation("GetMyAddress")]
+        VMAddress GetMyAddress();
     }
 }

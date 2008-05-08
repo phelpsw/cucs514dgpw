@@ -90,7 +90,7 @@ namespace VideoMonitor_Proj3
             pictureBox1.Image = static_image.Picture;
 
             // send frame on source channel
-            this.streamEndPoint.Interface.SendFrame(static_image, new FrameID(DateTime.Now, 0));
+            this.streamEndPoint.Interface.SendFrame(static_image, new FrameID(DateTime.Now, 0, streamEndPoint.Interface.GetMyAddress()));
         }
 
         private void startStream_Click(object sender, EventArgs e)

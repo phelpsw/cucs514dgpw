@@ -154,10 +154,11 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("6`1", "FrameID")]
     public sealed class FrameID
     {
-        public FrameID(DateTime time, int id)
+        public FrameID(DateTime time, int id, VMAddress src)
         {
             this.time = time;
             this.id = id;
+            this.src = src;
         }
 
         public FrameID()
@@ -168,6 +169,8 @@ namespace VideoMonitor_Proj3
         public DateTime time;
         [XmlElement]
         public int id;
+        [XmlElement]
+        public VMAddress src;
          
     }
 
@@ -306,6 +309,38 @@ namespace VideoMonitor_Proj3
             //video viewer services
             public const int SVC_AVAIL_VIEWER_USR_C = 16; //viewer availiable
         }
+
+        public string printServiceType(int val)
+        {
+            switch (val)
+            {
+                case ServiceType.SVC_TYPE_VIDEO_SOURCE:
+                    return "Source";
+                case ServiceType.SVC_TYPE_VIDEO_SERVER:
+                    return "Server";
+                case ServiceType.SVC_TYPE_VIDEO_VIEWER:
+                    return "Viewer";
+                default:
+                    return "Unknown Type";
+            }
+        }
+
+        public string printAvailableServices(int val)
+        {
+            string output = "";
+            if((val | AvailService.SVC_AVAIL_VIDEO_SOURCE) > 0) // stupid c# doesn't treat this as a boolean
+                output += "Video Source ";
+            if ((val | AvailService.SVC_AVAIL_PZT_CAMERA_C) > 0)
+                output += "Pan Zoom Tilt Camera ";
+            if ((val | AvailService.SVC_AVAIL_VFRAME_CNTRL) > 0)
+                output += "Frame Rate Control ";
+            if ((val | AvailService.SVC_AVAIL_VIDEO_MUX_DX) > 0)
+                output += "Video Multiplexer ";
+            if ((val | AvailService.SVC_AVAIL_VIEWER_USR_C) > 0)
+                output += "Video Viewer ";
+            return output;
+        }
+
         [XmlElement]
         public VMAddress svc_addr; //service address for re-refrence
 
