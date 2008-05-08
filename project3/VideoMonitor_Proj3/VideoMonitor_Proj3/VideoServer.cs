@@ -71,6 +71,9 @@ namespace VideoMonitor_Proj3
             throw new NotImplementedException();
         }
 
+        void IVMAppFunc.OnNetworkUpdate(string origID)
+        {
+        }
 
         #endregion
     }
