@@ -190,7 +190,7 @@ namespace VideoMonitor_Proj3
         //get a service's index by it's address
         public VMService getServicesByID(VMAddress addr)
         {
-            foreach (VMService svc in services.services)
+            foreach (VMService svc in services.serviceSet.ToArray())
             {
                 if (svc.svc_addr.id[0] == addr.id[0])
                 {
@@ -272,10 +272,12 @@ namespace VideoMonitor_Proj3
     [QS.Fx.Reflection.ValueClass("8`1", "VMService")]
     public sealed class VMService
     {
-        public VMService(VMAddress addr, int svc_type, int svc_avail, VMService subServices)
+        public VMService(VMAddress addr, int svc_type, int svc_avail, VMServices subServices)
         {
+            this.svc_addr = addr;
             this.svc_type = svc_type;
             this.svc_avail = svc_avail;
+            this.subServices = subServices;
         }
 
         public VMService()
@@ -322,11 +324,13 @@ namespace VideoMonitor_Proj3
     {
         public VMServices(VMService[] services)
         {
+            serviceSet = new List<VMService>();
             this.services = services;
         }
 
         public VMServices()
         {
+            serviceSet = new List<VMService>();
         }
 
         public List<VMService> serviceSet;
