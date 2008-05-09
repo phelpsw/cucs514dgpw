@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
+using System.IO;
 
 namespace VideoMonitor_Proj3
 {
@@ -24,6 +25,8 @@ namespace VideoMonitor_Proj3
             this.uiendpoint = QS.Fx.Endpoint.Internal.Create.ExportedUI(this);
             this.streamEndPoint = QS.Fx.Endpoint.Internal.Create.DualInterface<IVMCommInt, IVMAppFunc>(this);
             this.viewerConnection = this.streamEndPoint.Connect(streamProcessor.Object.VideoProcessor);
+        
+            
         }
 
         private QS.Fx.Endpoint.Internal.IExportedUI uiendpoint;
@@ -45,6 +48,8 @@ namespace VideoMonitor_Proj3
 
         double total_tme = 0.0;
 
+        TextWriter tw;
+
         void IVMAppFunc.RecieveFrame(VMImage frame, FrameID id, string origID)
         {
 
@@ -54,14 +59,19 @@ namespace VideoMonitor_Proj3
                     pictureBox1.Image = frame.Picture;
 
                 total_tme += DateTime.Now.Subtract(id.time).Milliseconds;
-
+                /*
                 frames_rcv++;
-
+                tw = new StreamWriter("c:\\log.txt", true);
+                tw.WriteLine(frames_rcv.ToString() + "," + Math.Round((total_tme / frames_rcv), 4).ToString());
+                tw.Close();
+                */
+                /*
                 textBox1.Text = "";
 
                 textBox1.Text += "Total Frames:\r\n\t"+frames_rcv.ToString()+"\r\n";
 
                 textBox1.Text += "Average Time To Send\r\n\t"+Math.Round((total_tme/frames_rcv),4).ToString()+"";
+                */
             }
             // buffer image
             // use timer to grab from buffer
